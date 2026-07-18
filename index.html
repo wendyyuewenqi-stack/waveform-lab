@@ -316,15 +316,15 @@
       <h1>Waveform<span>Lab</span></h1>
       <div class="tagline">.wav intake &middot; playback &middot; freeze-frame spectrum analysis</div>
     </div>
-    <div class="plate">MODEL WL-1 &middot; SIG. ANALYZER</div>
+    <div class="plate">MODEL WL-1 &middot; SIG. ANALYSER</div>
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-page="analyze">Analyze</button>
+    <button class="tab-btn active" data-page="analyze">Analyse</button>
     <button class="tab-btn" data-page="compare">Compare</button>
   </div>
 
-  <!-- ============ PAGE: ANALYZE ============ -->
+  <!-- ============ PAGE: ANALYSE ============ -->
   <div class="page active" id="page-analyze">
   <div class="grid">
 
@@ -992,7 +992,7 @@
     drawGrid(ctx, w, h);
 
     const dbMin = -90, dbMax = 0;
-    // dBFS axis on the left (comparison uses raw levels, not peak-normalized,
+    // dBFS axis on the left (comparison uses raw levels, not peak-normalised,
     // so absolute loudness differences between files stay visible)
     ctx.fillStyle = '#6b6b64';
     ctx.font = '11px "JetBrains Mono", monospace';
@@ -1457,7 +1457,7 @@
   let freqScaleMode = 'linear'; // 'linear' | 'log'
   let OCTAVE_FRACTION = 1/24; // fractional-octave smoothing; 0 = off (raw)
 
-  // Canvas x-position (0..w) for a given frequency, honoring the current scale mode.
+  // Canvas x-position (0..w) for a given frequency, honouring the current scale mode.
   function freqToX(freq, w){
     const f = Math.max(FREQ_MIN, Math.min(FREQ_MAX, freq));
     if (freqScaleMode === 'log'){
@@ -1468,7 +1468,7 @@
     return ((f - FREQ_MIN) / (FREQ_MAX - FREQ_MIN)) * w;
   }
 
-  // Frequency for a given canvas x-position (0..w), honoring the current scale mode.
+  // Frequency for a given canvas x-position (0..w), honouring the current scale mode.
   function xToFreq(x, w){
     const frac = Math.min(1, Math.max(0, x / w));
     if (freqScaleMode === 'log'){
@@ -1675,7 +1675,7 @@
 
   function captureSpectrum(entry, time){
     const capture = computeSpectrumAt(entry.audioBuffer, time, 4096, 65536);
-    // Normalize so the strongest peak reads as 100 dB (relative scale),
+    // Normalise so the strongest peak reads as 100 dB (relative scale),
     // everything else scaled down by the same fixed offset.
     capture.normOffset = capture.peaks.length ? (PEAK_TARGET_DB - capture.peaks[0].db) : 0;
     lastCapture = capture;
@@ -1711,7 +1711,7 @@
         <div class="stat"><div class="k">Duration</div><div class="v">${fmtTime(entry.audioBuffer.duration)}</div></div>
       </div>
       <div class="placeholder" style="text-align:left;padding:0 2px 18px;">
-        "Rel" is a normalized scale where the strongest peak in this capture is set to 100 dB and everything else is scaled down by the same fixed amount — it is not calibrated acoustic SPL. "dBFS" is the raw, uncalibrated digital level (0 dB = loudest a sample can be; negative is normal).
+        "Rel" is a normalised scale where the strongest peak in this capture is set to 100 dB and everything else is scaled down by the same fixed amount — it is not calibrated acoustic SPL. "dBFS" is the raw, uncalibrated digital level (0 dB = loudest a sample can be; negative is normal).
       </div>
     `;
 
@@ -1747,7 +1747,7 @@
     csv += `Analysis Window (samples),${capture.M}\n`;
     csv += `FFT Size (zero-padded),${capture.N}\n`;
     csv += `Window RMS,${capture.rms.toFixed(6)}\n`;
-    csv += `Normalization,Peak set to ${PEAK_TARGET_DB} dB (rel), offset ${off.toFixed(2)} dB applied to dBFS\n\n`;
+    csv += `Normalisation,Peak set to ${PEAK_TARGET_DB} dB (rel), offset ${off.toFixed(2)} dB applied to dBFS\n\n`;
     csv += 'Top Peaks\nRank,Frequency (Hz),Level (rel dB),Level (dBFS),Magnitude\n';
     capture.peaks.forEach((p,i) => {
       csv += `${i+1},${p.freq.toFixed(2)},${(p.db+off).toFixed(2)},${p.db.toFixed(2)},${p.mag.toExponential(4)}\n`;
