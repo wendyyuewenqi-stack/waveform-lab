@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waveform Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;
+    --panel:#fdfdfc;
+    --panel-raised:#f1f1ec;
+    --line:#d6d6d0;
+    --line-soft:#e6e6e1;
+    --phosphor:#0f8a4c;
+    --phosphor-dim:#a8d9bf;
+    --amber:#b5690a;
+    --amber-dim:#e8c79a;
+    --text:#111111;
+    --text-dim:#4a4a45;
+    --text-faint:#83837c;
+    --danger:#c23b2e;
+    --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#ffffff;
+    color:var(--text);
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:17px;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1280px;margin:0 auto;padding:32px 24px 70px;}
+
+  /* ---------- Header ---------- */
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:26px;flex-wrap:wrap;gap:12px;
+  }
+  .brand{display:flex;align-items:baseline;gap:14px;}
+  h1{
+    font-size:28px;font-weight:800;letter-spacing:0.12em;margin:0;
+    text-transform:uppercase;color:var(--text);
+  }
+  h1 span{color:var(--phosphor);}
+  .tagline{color:var(--text-dim);font-size:14px;letter-spacing:0.04em;}
+  .plate{
+    font-size:12px;color:var(--text-faint);letter-spacing:0.07em;
+    border:1px solid var(--line);padding:6px 10px;border-radius:var(--radius);
+  }
+
+  /* ---------- Layout ---------- */
+  .grid{display:grid;grid-template-columns:270px 1fr;gap:20px;}
+  #page-compare .grid{grid-template-columns:440px 1fr;}
+  @media (max-width:1000px){#page-compare .grid{grid-template-columns:1fr;}}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px;
+  }
+  .panel + .panel{margin-top:20px;}
+  .panel-label{
+    font-size:12px;letter-spacing:0.13em;color:var(--text-dim);
+    text-transform:uppercase;margin-bottom:14px;display:flex;
+    justify-content:space-between;align-items:center;
+  }
+  .panel-label .count{color:var(--text-faint);}
+
+  /* ---------- Library ---------- */
+  .dropzone{
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+    padding:22px 12px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:14px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+    margin-bottom:16px;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--phosphor-dim);
+    color:var(--phosphor);
+    background:rgba(76,255,160,0.03);
+  }
+  .dropzone input{display:none;}
+  .dropzone .big{font-size:26px;display:block;margin-bottom:6px;}
+
+  .file-list{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto;}
+  .file-item{
+    display:flex;flex-direction:column;gap:3px;
+    padding:12px 12px;border-radius:var(--radius);
+    border:1px solid transparent;
+    cursor:pointer;font-size:14px;
+    background:transparent;
+  }
+  .file-item:hover{background:var(--panel-raised);}
+  .file-item.active{
+    border-color:var(--phosphor-dim);
+    background:rgba(76,255,160,0.06);
+  }
+  .file-item .fname{
+    color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .file-item.active .fname{color:var(--phosphor);}
+  .file-item .fmeta{color:var(--text-faint);font-size:12px;}
+  .empty-note{color:var(--text-faint);font-size:14px;line-height:1.7;padding:6px 2px;}
+
+  /* ---------- Transport ---------- */
+  .transport{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  button.ctrl{
+    background:var(--panel-raised);
+    border:1px solid var(--line);
+    color:var(--text);
+    width:54px;height:54px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:19px;
+    display:flex;align-items:center;justify-content:center;
+    transition:border-color .15s, color .15s;
+  }
+  button.ctrl:hover:not(:disabled){border-color:var(--phosphor-dim);color:var(--phosphor);}
+  button.ctrl:disabled{opacity:.35;cursor:not-allowed;}
+  button.ctrl.stop{border-radius:var(--radius);}
+
+  .time-readout{
+    font-size:16px;color:var(--text-dim);min-width:150px;
+  }
+  .time-readout b{color:var(--text);font-weight:600;}
+
+  .scrub-wrap{flex:1;min-width:180px;}
+
+  button.text-btn{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;
+    padding:11px 18px;border-radius:var(--radius);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  button.text-btn:hover:not(:disabled){border-color:var(--phosphor-dim);color:var(--phosphor);}
+  button.text-btn:disabled{opacity:.3;cursor:not-allowed;}
+
+  /* ---------- Waveform overview ---------- */
+  .wave-canvas-wrap{margin-top:18px;position:relative;}
+  canvas#waveCanvas{width:100%;height:88px;display:block;cursor:pointer;border-radius:var(--radius);touch-action:none;}
+
+  /* ---------- Spectrum screen ---------- */
+  .screen{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(15,138,76,0.05), transparent 70%),
+      #fbfbf9;
+    margin-top:10px;
+    overflow:hidden;
+  }
+  canvas#fftCanvas{width:100%;height:440px;display:block;cursor:crosshair;touch-action:none;}
+  canvas#compareCanvas{width:100%;height:440px;display:block;cursor:crosshair;touch-action:none;}
+  canvas#previewCanvas{width:100%;height:440px;display:block;}
+  .screen-badge{
+    position:absolute;top:12px;right:14px;
+    font-size:11px;letter-spacing:0.09em;text-transform:uppercase;
+    padding:5px 10px;border-radius:var(--radius);
+    border:1px solid var(--line);color:var(--text-faint);
+  }
+  .screen-badge.live{color:var(--phosphor);border-color:var(--phosphor-dim);}
+  .screen-badge.frozen{color:var(--amber);border-color:var(--amber-dim);}
+  .screen-stamp{
+    position:absolute;bottom:12px;left:14px;
+    font-size:12px;color:var(--text-faint);letter-spacing:0.05em;
+  }
+
+  /* ---------- Data sheet ---------- */
+  .sheet-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+  .sheet-title{font-size:14px;letter-spacing:0.1em;color:var(--text-dim);text-transform:uppercase;}
+  .sheet-title b{color:var(--amber);}
+
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
+    margin-bottom:20px;
+  }
+  .stat{background:var(--panel-raised);padding:14px 16px;}
+  .stat .k{font-size:11px;letter-spacing:0.09em;color:var(--text-faint);text-transform:uppercase;margin-bottom:6px;}
+  .stat .v{font-size:18px;color:var(--text);font-weight:600;}
+  .stat .v.accent{color:var(--phosphor);}
+
+  table.peaks{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:16px;}
+  table.peaks th{
+    text-align:left;font-size:11px;letter-spacing:0.09em;text-transform:uppercase;
+    color:var(--text-faint);border-bottom:1px solid var(--line);padding:9px 10px;font-weight:600;
+  }
+  table.peaks td{padding:9px 10px;border-bottom:1px solid var(--line-soft);color:var(--text-dim);}
+  table.peaks tr:hover td{color:var(--text);}
+  table.peaks td.rank{color:var(--text-faint);}
+  table.peaks td.freq{color:var(--phosphor);font-weight:600;}
+  table.peaks tbody tr:first-child td{color:var(--amber);}
+  table.peaks tbody tr:first-child td.freq{color:var(--amber);}
+
+  .sheet-actions{display:flex;gap:8px;}
+
+  .placeholder{
+    color:var(--text-faint);font-size:14px;line-height:1.8;
+    padding:26px 6px;text-align:center;
+  }
+
+  footer{
+    margin-top:32px;padding-top:16px;border-top:1px solid var(--line);
+    color:var(--text-faint);font-size:12px;letter-spacing:0.03em;line-height:1.8;
+  }
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:5px;
+    background:var(--line);border-radius:3px;outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    background:var(--phosphor);cursor:pointer;box-shadow:0 0 6px rgba(76,255,160,0.6);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:18px;height:18px;border-radius:50%;border:none;
+    background:var(--phosphor);cursor:pointer;box-shadow:0 0 6px rgba(76,255,160,0.6);
+  }
+
+  /* ---------- Tabs / pages ---------- */
+  /* ---------- Axis controls (scale + range) ---------- */
+  .axis-bar{display:flex;gap:26px;flex-wrap:wrap;align-items:center;margin:14px 0;}
+  .axis-group{display:flex;align-items:center;gap:8px;}
+  .axis-label{font-size:12px;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;}
+  button.scale-btn{
+    background:var(--panel-raised);border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:13px;padding:8px 16px;border-radius:var(--radius);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  button.scale-btn:hover{border-color:var(--phosphor-dim);}
+  button.scale-btn.active{border-color:var(--phosphor);color:var(--phosphor);font-weight:600;}
+  input.freq-min-input, input.freq-max-input{
+    width:84px;font-family:inherit;font-size:15px;padding:8px 10px;
+    border:1px solid var(--line);border-radius:var(--radius);background:#ffffff;color:var(--text);
+  }
+  select.smoothing-select{
+    font-family:inherit;font-size:14px;padding:8px 10px;
+    border:1px solid var(--line);border-radius:var(--radius);background:#ffffff;color:var(--text);
+    cursor:pointer;
+  }
+
+  .tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+  .tab-btn{
+    background:transparent;border:none;color:var(--text-dim);
+    font-family:inherit;font-size:14px;letter-spacing:0.04em;
+    padding:10px 4px;margin-right:22px;cursor:pointer;
+    border-bottom:3px solid transparent;margin-bottom:-1px;
+    transition:color .15s, border-color .15s;
+  }
+  .tab-btn:hover{color:var(--text);}
+  .tab-btn.active{color:var(--text);border-bottom-color:var(--phosphor);font-weight:600;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  /* ---------- Compare page ---------- */
+  .compare-rows{display:flex;flex-direction:column;gap:18px;max-height:680px;overflow-y:auto;}
+  .compare-row{border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .compare-row .cr-name{
+    font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis;margin-bottom:8px;
+  }
+  .cr-wave-wrap{margin-bottom:10px;}
+  canvas.cr-wave{width:100%;height:130px;display:block;cursor:pointer;border-radius:var(--radius);touch-action:none;}
+  .compare-row .cr-controls{display:flex;align-items:center;gap:10px;}
+  .compare-row .cr-time{font-size:12px;color:var(--text-dim);min-width:58px;}
+  .compare-row .cr-slider{flex:1;}
+  .compare-row .cr-add{
+    margin-top:10px;width:100%;
+    background:var(--panel-raised);border:1px solid var(--line);color:var(--text);
+    font-family:inherit;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;
+    padding:8px;border-radius:var(--radius);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  .compare-row .cr-add:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
+
+  .legend-item{
+    display:flex;align-items:center;gap:10px;
+    padding:10px 4px;border-bottom:1px solid var(--line-soft);font-size:13px;
+  }
+  .legend-item:last-child{border-bottom:none;}
+  .legend-swatch{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .legend-info{flex:1;min-width:0;}
+  .legend-info .li-name{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .legend-info .li-meta{color:var(--text-faint);font-size:11px;}
+  .legend-remove{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .legend-remove:hover{border-color:var(--danger);color:var(--danger);}
+
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <h1>Waveform<span>Lab</span></h1>
+      <div class="tagline">.wav intake &middot; playback &middot; freeze-frame spectrum analysis</div>
+    </div>
+    <div class="plate">MODEL WL-1 &middot; SIG. ANALYZER</div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-page="analyze">Analyze</button>
+    <button class="tab-btn" data-page="compare">Compare</button>
+  </div>
+
+  <!-- ============ PAGE: ANALYZE ============ -->
+  <div class="page active" id="page-analyze">
+  <div class="grid">
+
+    <!-- LEFT: LIBRARY -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Library</span><span class="count" id="fileCount">0 loaded</span></div>
+        <label class="dropzone" id="dropzone">
+          <span class="big">+</span>
+          Load .wav file(s)
+          <input type="file" id="fileInput" accept=".wav,audio/wav,audio/x-wav" multiple>
+        </label>
+        <div class="file-list" id="fileList">
+          <div class="empty-note">No files yet. Drop or select .wav files above — they're kept in memory for this session.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: WORKSPACE -->
+    <div>
+
+      <div class="panel">
+        <div class="panel-label"><span id="nowPlayingLabel">No file selected</span></div>
+
+        <div class="transport">
+          <button class="ctrl" id="playBtn" disabled title="Play / Pause">&#9658;</button>
+          <button class="ctrl stop" id="stopBtn" disabled title="Stop &amp; capture spectrum">&#9632;</button>
+          <div class="time-readout"><b id="curTime">0:00.000</b> / <span id="durTime">0:00.000</span></div>
+          <div class="scrub-wrap">
+            <input type="range" id="scrub" min="0" max="1000" value="0" step="1" disabled>
+          </div>
+        </div>
+
+        <div class="wave-canvas-wrap">
+          <canvas id="waveCanvas" width="1200" height="88"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label"><span>Spectrum <span class="freq-range-label" data-suffix="" style="color:var(--text-faint);">(50–1000 Hz, 1/24-oct smoothed)</span></span></div>
+        <div class="axis-bar">
+          <div class="axis-group">
+            <span class="axis-label">Scale</span>
+            <button class="scale-btn active" data-scale="linear">Linear</button>
+            <button class="scale-btn" data-scale="log">Log</button>
+          </div>
+          <div class="axis-group">
+            <span class="axis-label">Range</span>
+            <input type="number" class="freq-min-input" value="50" min="1" step="1">
+            <span>–</span>
+            <input type="number" class="freq-max-input" value="1000" min="2" step="1">
+            <span>Hz</span>
+          </div>
+          <div class="axis-group">
+            <span class="axis-label">Smoothing</span>
+            <select class="smoothing-select">
+              <option value="off">Off (raw)</option>
+              <option value="48">1/48 oct</option>
+              <option value="24" selected>1/24 oct</option>
+              <option value="12">1/12 oct</option>
+              <option value="6">1/6 oct</option>
+              <option value="3">1/3 oct</option>
+            </select>
+          </div>
+        </div>
+        <div class="screen">
+          <span class="screen-badge" id="screenBadge">idle</span>
+          <canvas id="fftCanvas" width="1200" height="440"></canvas>
+          <span class="screen-stamp" id="screenStamp"></span>
+        </div>
+      </div>
+
+      <div class="panel" id="sheetPanel">
+        <div class="sheet-header">
+          <div class="sheet-title">Data Sheet <span id="sheetSub"></span></div>
+          <div class="sheet-actions">
+            <button class="text-btn" id="exportBtn" disabled>Export CSV</button>
+          </div>
+        </div>
+        <div id="sheetBody">
+          <div class="placeholder">Press play, then press stop at any moment — a spectrum snapshot and data sheet will be captured at that exact point in the recording.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+  <!-- ============ PAGE: COMPARE ============ -->
+  <div class="page" id="page-compare">
+  <div class="grid">
+
+    <!-- LEFT: LIBRARY + PER-FILE MOMENT PICKER -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Library</span><span class="count" id="compareFileCount">0 loaded</span></div>
+        <label class="dropzone" id="dropzoneCompare">
+          <span class="big">+</span>
+          Load .wav file(s)
+          <input type="file" id="fileInputCompare" accept=".wav,audio/wav,audio/x-wav" multiple>
+        </label>
+        <div class="empty-note" style="margin-bottom:10px;">Pick a moment in each file below, then add it to the comparison graph. Add the same file more than once to compare two moments from it.</div>
+        <div class="compare-rows" id="compareRows">
+          <div class="empty-note">No files yet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: OVERLAY GRAPH -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Live Preview <span class="freq-range-label" data-suffix="dBFS" style="color:var(--text-faint);">(50–1000 Hz, dBFS)</span> <span id="previewLabel" style="color:var(--text-faint);"></span></span></div>
+        <div class="axis-bar">
+          <div class="axis-group">
+            <span class="axis-label">Scale</span>
+            <button class="scale-btn active" data-scale="linear">Linear</button>
+            <button class="scale-btn" data-scale="log">Log</button>
+          </div>
+          <div class="axis-group">
+            <span class="axis-label">Range</span>
+            <input type="number" class="freq-min-input" value="50" min="1" step="1">
+            <span>–</span>
+            <input type="number" class="freq-max-input" value="1000" min="2" step="1">
+            <span>Hz</span>
+          </div>
+          <div class="axis-group">
+            <span class="axis-label">Smoothing</span>
+            <select class="smoothing-select">
+              <option value="off">Off (raw)</option>
+              <option value="48">1/48 oct</option>
+              <option value="24" selected>1/24 oct</option>
+              <option value="12">1/12 oct</option>
+              <option value="6">1/6 oct</option>
+              <option value="3">1/3 oct</option>
+            </select>
+          </div>
+        </div>
+        <div class="screen">
+          <canvas id="previewCanvas" width="1200" height="440"></canvas>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label">
+          <span>Comparison <span class="freq-range-label" data-suffix="dBFS" style="color:var(--text-faint);">(50–1000 Hz, dBFS, 1/24-oct smoothed)</span></span>
+          <button class="text-btn" id="clearCompareBtn">Clear All</button>
+        </div>
+        <div class="screen">
+          <canvas id="compareCanvas" width="1200" height="440"></canvas>
+        </div>
+        <div id="compareCursorInfo" class="placeholder" style="text-align:left;padding:10px 2px;">
+          Drag on the graph to read off levels at a chosen frequency across every trace.
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-label"><span>Traces</span></div>
+        <div id="compareLegend">
+          <div class="empty-note">Nothing added yet — pick a moment on the left and click "Add Snapshot".</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <footer>
+    Files are decoded and held in browser memory only — nothing leaves this tab, and the library resets on page reload.<br>
+    Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centered on the moment playback stopped.
+  </footer>
+
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---------------- State ----------------
+  let library = [];          // {id, name, size, url, audioBuffer, wavInfo}
+  let activeId = null;
+  let audioEl = null;
+  let audioCtx = null;
+  let sourceNode = null;
+  let analyser = null;
+  let rafId = null;
+  let isPlaying = false;
+  let lastCapture = null;    // {time, freqs, mags, peaks, rms, sampleRate}
+  let cursorFreq = null;     // user-draggable readout line on the frozen graph
+  let draggingCursor = false;
+  let waveDragging = false;
+  let captureScheduled = false;
+  let pendingCaptureEntry = null;
+  let pendingCaptureTime = null;
+
+  // Compare page state
+  const TRACE_COLORS = ['#0f8a4c','#b5690a','#2f6fb0','#a02b9e','#c23b2e','#0a8a8a','#8a7a00','#555550'];
+  let compareTraces = [];    // {id, color, entryName, time, capture}
+  let compareIdSeq = 0;
+  let compareCursorFreq = null;
+  let draggingCompareCursor = false;
+  let draggingTraceId = null;
+  let dragStartClientY = 0;
+  let dragStartOffset = 0;
+  let previewScheduled = false;
+  let pendingPreviewEntry = null;
+  let pendingPreviewTime = null;
+  let lastPreviewCapture = null;
+
+  const el = (id) => document.getElementById(id);
+  const fileInput = el('fileInput');
+  const dropzone = el('dropzone');
+  const fileList = el('fileList');
+  const fileCount = el('fileCount');
+  const nowPlayingLabel = el('nowPlayingLabel');
+  const playBtn = el('playBtn');
+  const stopBtn = el('stopBtn');
+  const curTimeEl = el('curTime');
+  const durTimeEl = el('durTime');
+  const scrub = el('scrub');
+  const waveCanvas = el('waveCanvas');
+  const fftCanvas = el('fftCanvas');
+  const screenBadge = el('screenBadge');
+  const screenStamp = el('screenStamp');
+  const sheetBody = el('sheetBody');
+  const sheetSub = el('sheetSub');
+  const exportBtn = el('exportBtn');
+
+  const fileInputCompare = el('fileInputCompare');
+  const dropzoneCompare = el('dropzoneCompare');
+  const compareFileCount = el('compareFileCount');
+  const compareRows = el('compareRows');
+  const compareCanvas = el('compareCanvas');
+  const compareLegend = el('compareLegend');
+  const compareCursorInfo = el('compareCursorInfo');
+  const clearCompareBtn = el('clearCompareBtn');
+  const previewCanvas = el('previewCanvas');
+  const previewLabel = el('previewLabel');
+
+  // ---------------- Utils ----------------
+  function fmtTime(t){
+    if (!isFinite(t) || t < 0) t = 0;
+    const m = Math.floor(t/60);
+    const s = t - m*60;
+    return `${m}:${s.toFixed(3).padStart(6,'0')}`;
+  }
+  function fmtBytes(n){
+    if (n < 1024) return n + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/1024/1024).toFixed(2) + ' MB';
+  }
+  function fmtHz(f){
+    if (f >= 1000) return (f/1000).toFixed(2) + ' kHz';
+    return f.toFixed(1) + ' Hz';
+  }
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+
+  // ---------------- WAV header parse (best-effort) ----------------
+  function parseWavHeader(buf){
+    try{
+      const dv = new DataView(buf);
+      if (dv.getUint32(0,false) !== 0x52494646) return null; // "RIFF"
+      let offset = 12;
+      let fmt = null;
+      while (offset < dv.byteLength - 8){
+        const id = String.fromCharCode(dv.getUint8(offset),dv.getUint8(offset+1),dv.getUint8(offset+2),dv.getUint8(offset+3));
+        const size = dv.getUint32(offset+4,true);
+        if (id === 'fmt '){
+          fmt = {
+            audioFormat: dv.getUint16(offset+8,true),
+            numChannels: dv.getUint16(offset+10,true),
+            sampleRate: dv.getUint32(offset+12,true),
+            byteRate: dv.getUint32(offset+16,true),
+            blockAlign: dv.getUint16(offset+20,true),
+            bitsPerSample: dv.getUint16(offset+22,true),
+          };
+          break;
+        }
+        offset += 8 + size + (size % 2);
+      }
+      return fmt;
+    }catch(e){ return null; }
+  }
+
+  // ---------------- FFT (radix-2 Cooley-Tukey, in place) ----------------
+  function fftInPlace(re, im){
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++){
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j){
+        [re[i],re[j]] = [re[j],re[i]];
+        [im[i],im[j]] = [im[j],im[i]];
+      }
+    }
+    for (let len = 2; len <= n; len <<= 1){
+      const ang = -2*Math.PI/len;
+      const wr0 = Math.cos(ang), wi0 = Math.sin(ang);
+      for (let i = 0; i < n; i += len){
+        let curWr = 1, curWi = 0;
+        for (let j = 0; j < len/2; j++){
+          const ur = re[i+j], ui = im[i+j];
+          const vr = re[i+j+len/2]*curWr - im[i+j+len/2]*curWi;
+          const vi = re[i+j+len/2]*curWi + im[i+j+len/2]*curWr;
+          re[i+j] = ur+vr; im[i+j] = ui+vi;
+          re[i+j+len/2] = ur-vr; im[i+j+len/2] = ui-vi;
+          const nwr = curWr*wr0 - curWi*wi0;
+          const nwi = curWr*wi0 + curWi*wr0;
+          curWr = nwr; curWi = nwi;
+        }
+      }
+    }
+  }
+
+  function nextPow2(n){ let p = 1; while (p < n) p <<= 1; return p; }
+
+  // Compute windowed FFT centered at `time` (seconds) on an AudioBuffer.
+  // `M` is the real analysis window (determines true frequency resolution).
+  // `N` is the zero-padded FFT size (denser frequency grid, for a smooth curve
+  // — this does not add real resolution, it just interpolates between the
+  // M-sample window's true frequency response so smoothing has enough points
+  // to average over, even down at 50 Hz).
+  function computeSpectrumAt(audioBuffer, time, M, N){
+    M = M || 4096;
+    N = N || 65536;
+    const sr = audioBuffer.sampleRate;
+    const ch0 = audioBuffer.getChannelData(0);
+    const nCh = audioBuffer.numberOfChannels;
+    const center = Math.round(time * sr);
+    let start = center - Math.floor(M/2);
+    const re = new Float64Array(N);
+    const im = new Float64Array(N);
+
+    // mono downmix window extraction with zero padding at boundaries
+    let sumSq = 0, count = 0;
+    for (let i = 0; i < M; i++){
+      const idx = start + i;
+      let sample = 0;
+      if (idx >= 0 && idx < audioBuffer.length){
+        if (nCh === 1){
+          sample = ch0[idx];
+        } else {
+          let sum = 0;
+          for (let c = 0; c < nCh; c++) sum += audioBuffer.getChannelData(c)[idx];
+          sample = sum / nCh;
+        }
+        sumSq += sample*sample; count++;
+      }
+      // Hann window over the real M-sample analysis window
+      const w = 0.5 - 0.5*Math.cos(2*Math.PI*i/(M-1));
+      re[i] = sample * w;
+      im[i] = 0;
+    }
+    // remaining N-M samples stay zero (the zero-padding)
+    const rms = count ? Math.sqrt(sumSq/count) : 0;
+
+    fftInPlace(re, im);
+
+    const half = N/2;
+    const freqs = new Float64Array(half);
+    const mags = new Float64Array(half);
+    const dbs = new Float64Array(half);
+    for (let k = 0; k < half; k++){
+      const mag = Math.sqrt(re[k]*re[k] + im[k]*im[k]) / (M/2);
+      freqs[k] = k * sr / N;
+      mags[k] = mag;
+      dbs[k] = 20*Math.log10(mag + 1e-12);
+    }
+
+    // peak picking: local maxima above noise floor
+    const peaks = [];
+    const floor = -90;
+    for (let k = 2; k < half-2; k++){
+      if (dbs[k] > floor && dbs[k] > dbs[k-1] && dbs[k] >= dbs[k+1]){
+        peaks.push({freq: freqs[k], db: dbs[k], mag: mags[k]});
+      }
+    }
+    peaks.sort((a,b) => b.db - a.db);
+    // de-dup peaks within 40 Hz of a stronger peak already kept
+    const kept = [];
+    for (const p of peaks){
+      if (kept.every(q => Math.abs(q.freq - p.freq) > 40)) kept.push(p);
+      if (kept.length >= 10) break;
+    }
+
+    return { freqs, mags, dbs, peaks: kept, rms, sampleRate: sr, N, M, time };
+  }
+
+  // ---------------- Library management ----------------
+  function addFiles(fileArr){
+    [...fileArr].forEach(file => {
+      if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target.result;
+        const wavInfo = parseWavHeader(arrayBuffer.slice(0));
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
+          const blob = new Blob([arrayBuffer], {type:'audio/wav'});
+          const url = URL.createObjectURL(blob);
+          const entry = {
+            id: uid(), name: file.name, size: file.size,
+            url, audioBuffer, wavInfo
+          };
+          library.push(entry);
+          renderFileList();
+          renderCompareRows();
+          if (activeId === null) selectFile(entry.id);
+          tmpCtx.close();
+        }catch(err){
+          console.error('Could not decode', file.name, err);
+          alert(`Couldn't decode "${file.name}" as a WAV file.`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function renderFileList(){
+    fileCount.textContent = `${library.length} loaded`;
+    if (library.length === 0){
+      fileList.innerHTML = '<div class="empty-note">No files yet. Drop or select .wav files above — they\'re kept in memory for this session.</div>';
+      return;
+    }
+    fileList.innerHTML = '';
+    library.forEach(entry => {
+      const div = document.createElement('div');
+      div.className = 'file-item' + (entry.id === activeId ? ' active' : '');
+      const dur = entry.audioBuffer ? fmtTime(entry.audioBuffer.duration) : '--';
+      div.innerHTML = `<span class="fname">${entry.name}</span><span class="fmeta">${dur} &middot; ${fmtBytes(entry.size)}</span>`;
+      div.addEventListener('click', () => selectFile(entry.id));
+      fileList.appendChild(div);
+    });
+  }
+
+  // ---------------- Compare page ----------------
+  function renderCompareRows(){
+    compareFileCount.textContent = `${library.length} loaded`;
+    if (library.length === 0){
+      compareRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+      return;
+    }
+    compareRows.innerHTML = '';
+    library.forEach(entry => {
+      if (entry.compareFrac === undefined) entry.compareFrac = 0;
+      const dur = entry.audioBuffer ? entry.audioBuffer.duration : 0;
+
+      const row = document.createElement('div');
+      row.className = 'compare-row';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'cr-name';
+      nameEl.textContent = entry.name;
+
+      const waveWrap = document.createElement('div');
+      waveWrap.className = 'cr-wave-wrap';
+      const waveCanvasRow = document.createElement('canvas');
+      waveCanvasRow.className = 'cr-wave';
+      waveCanvasRow.width = 1200;
+      waveCanvasRow.height = 130;
+      waveWrap.appendChild(waveCanvasRow);
+
+      const controls = document.createElement('div');
+      controls.className = 'cr-controls';
+
+      const timeEl = document.createElement('span');
+      timeEl.className = 'cr-time';
+      timeEl.textContent = fmtTime(entry.compareFrac * dur);
+
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.className = 'cr-slider';
+      slider.min = 0; slider.max = 1000; slider.step = 1;
+      slider.value = Math.round(entry.compareFrac * 1000);
+
+      function setMoment(frac){
+        entry.compareFrac = Math.min(1, Math.max(0, frac));
+        slider.value = Math.round(entry.compareFrac * 1000);
+        timeEl.textContent = fmtTime(entry.compareFrac * dur);
+        if (entry.audioBuffer) drawWaveformOverview(waveCanvasRow, entry.audioBuffer, entry.compareFrac, dur);
+        schedulePreview(entry, entry.compareFrac * dur);
+      }
+
+      slider.addEventListener('input', () => setMoment(slider.value/1000));
+
+      let rowDragging = false;
+      function seekFromRowEvent(clientX){
+        const rect = waveCanvasRow.getBoundingClientRect();
+        const frac = (clientX - rect.left) / rect.width;
+        setMoment(frac);
+      }
+      waveCanvasRow.addEventListener('pointerdown', (e) => { rowDragging = true; seekFromRowEvent(e.clientX); });
+      window.addEventListener('pointermove', (e) => { if (rowDragging) seekFromRowEvent(e.clientX); });
+      window.addEventListener('pointerup', () => { rowDragging = false; });
+
+      controls.appendChild(slider);
+      controls.appendChild(timeEl);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'cr-add';
+      addBtn.textContent = 'Add Snapshot';
+      addBtn.addEventListener('click', () => {
+        addCompareTrace(entry, entry.compareFrac * dur);
+      });
+
+      row.appendChild(nameEl);
+      row.appendChild(waveWrap);
+      row.appendChild(controls);
+      row.appendChild(addBtn);
+      compareRows.appendChild(row);
+
+      if (entry.audioBuffer) drawWaveformOverview(waveCanvasRow, entry.audioBuffer, entry.compareFrac, dur);
+    });
+  }
+
+  function addCompareTrace(entry, time){
+    if (!entry.audioBuffer) return;
+    const capture = computeSpectrumAt(entry.audioBuffer, time, 4096, 65536);
+    const color = TRACE_COLORS[compareIdSeq % TRACE_COLORS.length];
+    compareIdSeq++;
+    compareTraces.push({ id: 'ct' + compareIdSeq, color, entryName: entry.name, time, capture, manualOffset: 0 });
+    renderCompareLegend();
+    drawCompareGraph();
+  }
+
+  function removeCompareTrace(id){
+    compareTraces = compareTraces.filter(t => t.id !== id);
+    renderCompareLegend();
+    drawCompareGraph();
+  }
+
+  function renderCompareLegend(){
+    if (compareTraces.length === 0){
+      compareLegend.innerHTML = '<div class="empty-note">Nothing added yet — pick a moment on the left and click "Add Snapshot".</div>';
+      return;
+    }
+    compareLegend.innerHTML = '';
+    compareTraces.forEach(t => {
+      const top = t.capture.peaks[0];
+      const item = document.createElement('div');
+      item.className = 'legend-item';
+
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-swatch';
+      swatch.style.background = t.color;
+
+      const offsetTag = t.manualOffset !== 0
+        ? ` · shifted ${t.manualOffset > 0 ? '+' : ''}${t.manualOffset.toFixed(1)} dB`
+        : '';
+
+      const info = document.createElement('div');
+      info.className = 'legend-info';
+      info.innerHTML = `<div class="li-name">${t.entryName} @ ${fmtTime(t.time)}</div>
+        <div class="li-meta">${top ? `peak ${fmtHz(top.freq)} · ${top.db.toFixed(1)} dBFS` : 'no peak found'}${offsetTag}</div>`;
+
+      if (t.manualOffset !== 0){
+        const resetBtn = document.createElement('button');
+        resetBtn.className = 'legend-remove';
+        resetBtn.innerHTML = '&#8635;';
+        resetBtn.title = 'Reset vertical shift';
+        resetBtn.addEventListener('click', () => {
+          t.manualOffset = 0;
+          renderCompareLegend();
+          drawCompareGraph();
+        });
+        item.appendChild(swatch);
+        item.appendChild(info);
+        item.appendChild(resetBtn);
+      } else {
+        item.appendChild(swatch);
+        item.appendChild(info);
+      }
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'legend-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove this trace';
+      removeBtn.addEventListener('click', () => removeCompareTrace(t.id));
+      item.appendChild(removeBtn);
+      compareLegend.appendChild(item);
+    });
+  }
+
+  // ---------------- Live preview (while choosing a snapshot moment) ----------------
+  function schedulePreview(entry, time){
+    pendingPreviewEntry = entry;
+    pendingPreviewTime = time;
+    if (previewScheduled) return;
+    previewScheduled = true;
+    requestAnimationFrame(() => {
+      previewScheduled = false;
+      if (pendingPreviewEntry) renderPreview(pendingPreviewEntry, pendingPreviewTime);
+    });
+  }
+
+  function renderPreview(entry, time){
+    if (!entry.audioBuffer) return;
+    const capture = computeSpectrumAt(entry.audioBuffer, time, 4096, 65536);
+    lastPreviewCapture = capture;
+    previewLabel.textContent = `— ${entry.name} @ ${fmtTime(time)}`;
+    drawPreviewSpectrum(capture);
+  }
+
+  function drawPreviewSpectrum(capture){
+    const ctx = previewCanvas.getContext('2d');
+    const w = previewCanvas.width, h = previewCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx, w, h);
+
+    const dbMin = -90, dbMax = 0;
+
+    ctx.fillStyle = '#6b6b64';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    for (let i = 0; i <= 6; i++){
+      const dbAtLine = dbMax - (i/6)*(dbMax - dbMin);
+      const y = (h/6)*i;
+      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#2f6fb0';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(47,111,176,0.3)';
+    ctx.shadowBlur = 5;
+    for (let x = 0; x < w; x++){
+      const freq = xToFreq(x, w);
+      const dbfs = getSmoothedDbAtFreq(capture, freq);
+      const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+      const norm = (db - dbMin)/(dbMax - dbMin);
+      const y = h - norm*h;
+      if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    const peaksInRange = capture.peaks.filter(p => p.freq >= FREQ_MIN && p.freq <= FREQ_MAX);
+    if (peaksInRange.length){
+      const top = peaksInRange[0];
+      const x = freqToX(top.freq, w);
+      ctx.strokeStyle = 'rgba(47,111,176,0.45)';
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#2f6fb0';
+      ctx.font = '13px "JetBrains Mono", monospace';
+      const lx = Math.min(w-150, x+8);
+      ctx.fillText(fmtHz(top.freq), lx, 18);
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.fillText(`${top.db.toFixed(1)} dBFS`, lx, 33);
+    }
+  }
+
+  function resetPreview(){
+    previewLabel.textContent = '— drag a waveform on the left to preview it here';
+    const ctx = previewCanvas.getContext('2d');
+    ctx.clearRect(0,0,previewCanvas.width, previewCanvas.height);
+    drawGrid(ctx, previewCanvas.width, previewCanvas.height);
+  }
+
+  function drawCompareGraph(){
+    const ctx = compareCanvas.getContext('2d');
+    const w = compareCanvas.width, h = compareCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx, w, h);
+
+    const dbMin = -90, dbMax = 0;
+    // dBFS axis on the left (comparison uses raw levels, not peak-normalized,
+    // so absolute loudness differences between files stay visible)
+    ctx.fillStyle = '#6b6b64';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    for (let i = 0; i <= 6; i++){
+      const dbAtLine = dbMax - (i/6)*(dbMax - dbMin);
+      const y = (h/6)*i;
+      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+    }
+
+    compareTraces.forEach(t => {
+      ctx.beginPath();
+      ctx.strokeStyle = t.color;
+      ctx.lineWidth = (t.id === draggingTraceId) ? 3 : 2;
+      for (let x = 0; x < w; x++){
+        const freq = xToFreq(x, w);
+        const dbfs = getSmoothedDbAtFreq(t.capture, freq) + t.manualOffset;
+        const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+        const norm = (db - dbMin)/(dbMax - dbMin);
+        const y = h - norm*h;
+        if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    });
+
+    if (compareCursorFreq != null && compareCursorFreq >= FREQ_MIN && compareCursorFreq <= FREQ_MAX){
+      const cx = freqToX(compareCursorFreq, w);
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+      ctx.setLineDash([]);
+      updateCompareCursorInfo();
+    }
+  }
+
+  // Canvas-pixel y-position of a trace's (offset-adjusted) curve at a given frequency
+  function traceYAtFreq(trace, freq, w, h){
+    const dbMin = -90, dbMax = 0;
+    const db = getSmoothedDbAtFreq(trace.capture, freq) + trace.manualOffset;
+    const clamped = Math.max(dbMin, Math.min(dbMax, db));
+    const norm = (clamped - dbMin)/(dbMax - dbMin);
+    return h - norm*h;
+  }
+
+  function updateCompareCursorInfo(){
+    if (compareCursorFreq == null || compareTraces.length === 0){
+      compareCursorInfo.innerHTML = 'Drag on the graph to read off levels at a chosen frequency across every trace — or grab a curve directly to slide it up/down and line up peaks.';
+      return;
+    }
+    const rows = compareTraces.map(t => {
+      const db = getSmoothedDbAtFreq(t.capture, compareCursorFreq) + t.manualOffset;
+      const offsetTag = t.manualOffset !== 0 ? ` (shifted ${t.manualOffset>0?'+':''}${t.manualOffset.toFixed(1)} dB)` : '';
+      return `<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <span class="legend-swatch" style="background:${t.color};"></span>
+        <span>${t.entryName} @ ${fmtTime(t.time)} — <b style="color:var(--text);">${db.toFixed(1)} dBFS</b>${offsetTag}</span>
+      </div>`;
+    }).join('');
+    compareCursorInfo.innerHTML = `<div>Cursor: <b style="color:var(--text);">${fmtHz(compareCursorFreq)}</b></div>${rows}`;
+  }
+
+  function updateCompareCursorFromEvent(clientX){
+    const rect = compareCanvas.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    compareCursorFreq = xToFreq(frac, 1);
+    drawCompareGraph();
+  }
+
+  const TRACE_PICK_THRESHOLD = 28; // canvas px — how close a click must be to a curve to grab it
+
+  compareCanvas.addEventListener('pointerdown', (evt) => {
+    const rect = compareCanvas.getBoundingClientRect();
+    const w = compareCanvas.width, h = compareCanvas.height;
+    const canvasX = (evt.clientX - rect.left) / rect.width * w;
+    const canvasY = (evt.clientY - rect.top) / rect.height * h;
+    const freq = xToFreq(canvasX, w);
+
+    let nearest = null, nearestDist = Infinity;
+    compareTraces.forEach(t => {
+      const y = traceYAtFreq(t, freq, w, h);
+      const dist = Math.abs(y - canvasY);
+      if (dist < nearestDist){ nearestDist = dist; nearest = t; }
+    });
+
+    if (nearest && nearestDist <= TRACE_PICK_THRESHOLD){
+      draggingTraceId = nearest.id;
+      dragStartClientY = evt.clientY;
+      dragStartOffset = nearest.manualOffset;
+      drawCompareGraph();
+    } else {
+      draggingCompareCursor = true;
+      updateCompareCursorFromEvent(evt.clientX);
+    }
+  });
+  window.addEventListener('pointermove', (evt) => {
+    if (draggingTraceId){
+      const t = compareTraces.find(tr => tr.id === draggingTraceId);
+      if (!t) return;
+      const rect = compareCanvas.getBoundingClientRect();
+      const scale = compareCanvas.height / rect.height;
+      const deltaCanvasY = (evt.clientY - dragStartClientY) * scale;
+      const deltaDb = -deltaCanvasY / compareCanvas.height * 90; // dbMax(0) - dbMin(-90)
+      t.manualOffset = dragStartOffset + deltaDb;
+      drawCompareGraph();
+      return;
+    }
+    if (draggingCompareCursor) updateCompareCursorFromEvent(evt.clientX);
+  });
+  window.addEventListener('pointerup', () => {
+    if (draggingTraceId){ draggingTraceId = null; renderCompareLegend(); drawCompareGraph(); }
+    draggingCompareCursor = false;
+  });
+
+  clearCompareBtn.addEventListener('click', () => {
+    compareTraces = [];
+    compareCursorFreq = null;
+    renderCompareLegend();
+    drawCompareGraph();
+  });
+
+  fileInputCompare.addEventListener('change', (e) => addFiles(e.target.files));
+  ;['dragover','dragenter'].forEach(evtName => {
+    dropzoneCompare.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneCompare.classList.add('drag'); });
+  });
+  ;['dragleave','drop'].forEach(evtName => {
+    dropzoneCompare.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneCompare.classList.remove('drag'); });
+  });
+  dropzoneCompare.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  // ---------------- Axis controls (scale + range) ----------------
+  function smoothingLabelText(){
+    if (OCTAVE_FRACTION <= 0) return 'unsmoothed';
+    const n = Math.round(1/OCTAVE_FRACTION);
+    return `1/${n}-oct smoothed`;
+  }
+
+  function updateFreqRangeLabels(){
+    const smoothTxt = smoothingLabelText();
+    document.querySelectorAll('.freq-range-label').forEach(el => {
+      const suffix = el.dataset.suffix || '';
+      const scaleTxt = freqScaleMode === 'log' ? ', log' : '';
+      const minTxt = FREQ_MIN >= 1000 ? (FREQ_MIN/1000).toFixed(1).replace(/\.0$/,'') + 'k' : Math.round(FREQ_MIN);
+      const maxTxt = FREQ_MAX >= 1000 ? (FREQ_MAX/1000).toFixed(1).replace(/\.0$/,'') + 'k' : Math.round(FREQ_MAX);
+      const parts = [`${minTxt}–${maxTxt} Hz${scaleTxt}`];
+      if (suffix) parts.push(suffix);
+      parts.push(smoothTxt);
+      el.textContent = `(${parts.join(', ')})`;
+    });
+  }
+
+  function redrawAllGraphs(){
+    if (lastCapture){
+      drawFrozenSpectrum(lastCapture);
+    } else {
+      const ctx = fftCanvas.getContext('2d');
+      ctx.clearRect(0,0,fftCanvas.width, fftCanvas.height);
+      drawGrid(ctx, fftCanvas.width, fftCanvas.height);
+    }
+    if (lastPreviewCapture) drawPreviewSpectrum(lastPreviewCapture);
+    else resetPreview();
+    drawCompareGraph();
+  }
+
+  function setScaleMode(mode){
+    freqScaleMode = mode;
+    document.querySelectorAll('.scale-btn').forEach(b => b.classList.toggle('active', b.dataset.scale === mode));
+    updateFreqRangeLabels();
+    redrawAllGraphs();
+  }
+
+  function setFreqRange(min, max){
+    if (!(min > 0) || !(max > min)) return;
+    FREQ_MIN = min;
+    FREQ_MAX = max;
+    document.querySelectorAll('.freq-min-input').forEach(i => i.value = min);
+    document.querySelectorAll('.freq-max-input').forEach(i => i.value = max);
+    updateFreqRangeLabels();
+    redrawAllGraphs();
+  }
+
+  function setSmoothing(val){
+    OCTAVE_FRACTION = (val === 'off') ? 0 : 1/parseInt(val, 10);
+    document.querySelectorAll('.smoothing-select').forEach(s => s.value = val);
+    updateFreqRangeLabels();
+    redrawAllGraphs();
+  }
+
+  document.querySelectorAll('.axis-bar').forEach(bar => {
+    const minInput = bar.querySelector('.freq-min-input');
+    const maxInput = bar.querySelector('.freq-max-input');
+    function applyRange(){
+      let min = parseFloat(minInput.value);
+      let max = parseFloat(maxInput.value);
+      if (!isFinite(min) || min < 1) min = 1;
+      if (!isFinite(max) || max <= min) max = min + 1;
+      setFreqRange(min, max);
+    }
+    minInput.addEventListener('change', applyRange);
+    maxInput.addEventListener('change', applyRange);
+    minInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
+    maxInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
+    bar.querySelectorAll('.scale-btn').forEach(btn => {
+      btn.addEventListener('click', () => setScaleMode(btn.dataset.scale));
+    });
+    const smoothingSelect = bar.querySelector('.smoothing-select');
+    if (smoothingSelect){
+      smoothingSelect.addEventListener('change', () => setSmoothing(smoothingSelect.value));
+    }
+  });
+
+  // ---------------- Tab navigation ----------------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      el('page-' + btn.dataset.page).classList.add('active');
+      if (btn.dataset.page === 'compare'){
+        drawCompareGraph();
+      }
+    });
+  });
+
+  // ---------------- Selection & playback wiring ----------------
+  function selectFile(id){
+    stopPlaybackInternal();
+    activeId = id;
+    cursorFreq = null;
+    const entry = library.find(f => f.id === id);
+    renderFileList();
+    if (!entry) return;
+
+    nowPlayingLabel.textContent = entry.name;
+    if (audioEl){
+      audioEl.pause();
+      audioEl.src = '';
+    }
+    audioEl = new Audio(entry.url);
+    audioEl.preload = 'auto';
+
+    audioEl.addEventListener('loadedmetadata', () => {
+      durTimeEl.textContent = fmtTime(entry.audioBuffer.duration);
+      scrub.disabled = false;
+      playBtn.disabled = false;
+      stopBtn.disabled = false;
+      drawWaveformOverview(waveCanvas, entry.audioBuffer);
+    });
+    audioEl.addEventListener('timeupdate', () => {
+      if (!isPlaying) return;
+      curTimeEl.textContent = fmtTime(audioEl.currentTime);
+      const dur = entry.audioBuffer.duration || 1;
+      scrub.value = Math.round((audioEl.currentTime/dur)*1000);
+      drawWaveformOverview(waveCanvas, entry.audioBuffer, audioEl.currentTime/dur);
+    });
+    audioEl.addEventListener('ended', () => {
+      captureSpectrum(entry, audioEl.duration);
+      resetTransportUI();
+    });
+
+    resetSheet();
+    resetScreen('idle');
+    curTimeEl.textContent = '0:00.000';
+    durTimeEl.textContent = '0:00.000';
+    scrub.value = 0;
+  }
+
+  function ensureAudioGraph(entry){
+    if (!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (sourceNode) { try{ sourceNode.disconnect(); }catch(e){} sourceNode = null; }
+    sourceNode = audioCtx.createMediaElementSource(audioEl);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 32768;
+    analyser.smoothingTimeConstant = 0.55;
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  }
+
+  playBtn.addEventListener('click', () => {
+    const entry = library.find(f => f.id === activeId);
+    if (!entry) return;
+    if (isPlaying){
+      audioEl.pause();
+      isPlaying = false;
+      playBtn.innerHTML = '&#9658;';
+      cancelAnimationFrame(rafId);
+      captureSpectrum(entry, audioEl.currentTime);
+    } else {
+      if (!sourceNode) ensureAudioGraph(entry);
+      audioEl.play();
+      isPlaying = true;
+      playBtn.innerHTML = '&#10073;&#10073;';
+      resetScreen('live');
+      hideSheetPlaceholderDuringPlay();
+      liveDraw();
+    }
+  });
+
+  stopBtn.addEventListener('click', () => {
+    const entry = library.find(f => f.id === activeId);
+    if (!entry || !audioEl) return;
+    const stopTime = audioEl.currentTime;
+    audioEl.pause();
+    cancelAnimationFrame(rafId);
+    captureSpectrum(entry, stopTime);
+    audioEl.currentTime = 0;
+    resetTransportUI();
+  });
+
+  function scheduleCaptureAt(entry, t){
+    pendingCaptureEntry = entry;
+    pendingCaptureTime = t;
+    if (captureScheduled) return;
+    captureScheduled = true;
+    requestAnimationFrame(() => {
+      captureScheduled = false;
+      if (pendingCaptureEntry) captureSpectrum(pendingCaptureEntry, pendingCaptureTime);
+    });
+  }
+
+  scrub.addEventListener('input', () => {
+    const entry = library.find(f => f.id === activeId);
+    if (!entry || !audioEl) return;
+    const dur = entry.audioBuffer.duration || 1;
+    const t = (scrub.value/1000)*dur;
+    audioEl.currentTime = t;
+    curTimeEl.textContent = fmtTime(t);
+    drawWaveformOverview(waveCanvas, entry.audioBuffer, t/dur);
+    if (!isPlaying) scheduleCaptureAt(entry, t);
+  });
+
+  function seekFromWaveEvent(clientX){
+    const entry = library.find(f => f.id === activeId);
+    if (!entry || !audioEl) return;
+    const rect = waveCanvas.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const dur = entry.audioBuffer.duration || 1;
+    const t = frac*dur;
+    audioEl.currentTime = t;
+    curTimeEl.textContent = fmtTime(t);
+    scrub.value = Math.round(frac*1000);
+    drawWaveformOverview(waveCanvas, entry.audioBuffer, frac);
+    if (!isPlaying) scheduleCaptureAt(entry, t);
+  }
+
+  waveCanvas.addEventListener('pointerdown', (evt) => {
+    if (!audioEl) return;
+    waveDragging = true;
+    seekFromWaveEvent(evt.clientX);
+  });
+  window.addEventListener('pointermove', (evt) => {
+    if (!waveDragging) return;
+    seekFromWaveEvent(evt.clientX);
+  });
+  window.addEventListener('pointerup', () => { waveDragging = false; });
+
+  // Draggable frequency/dB readout cursor on the captured spectrum graph
+  function updateCursorFromEvent(clientX){
+    const rect = fftCanvas.getBoundingClientRect();
+    const frac = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    cursorFreq = xToFreq(frac, 1);
+    if (lastCapture) drawFrozenSpectrum(lastCapture);
+  }
+  fftCanvas.addEventListener('pointerdown', (evt) => {
+    if (!lastCapture || isPlaying) return;
+    draggingCursor = true;
+    updateCursorFromEvent(evt.clientX);
+  });
+  window.addEventListener('pointermove', (evt) => {
+    if (!draggingCursor) return;
+    updateCursorFromEvent(evt.clientX);
+  });
+  window.addEventListener('pointerup', () => { draggingCursor = false; });
+
+  function stopPlaybackInternal(){
+    if (audioEl){ audioEl.pause(); }
+    isPlaying = false;
+    cancelAnimationFrame(rafId);
+    playBtn.innerHTML = '&#9658;';
+  }
+
+  function resetTransportUI(){
+    isPlaying = false;
+    playBtn.innerHTML = '&#9658;';
+    curTimeEl.textContent = '0:00.000';
+    scrub.value = 0;
+    const entry = library.find(f => f.id === activeId);
+    if (entry) drawWaveformOverview(waveCanvas, entry.audioBuffer, 0);
+  }
+
+  function hideSheetPlaceholderDuringPlay(){
+    // leave prior sheet visible until a new capture happens
+  }
+
+  // ---------------- Drawing: waveform overview ----------------
+  // `durationSec`, if given, adds time-axis tick labels along the bottom
+  // (used on the bigger Compare-page previews for extra detail).
+  function drawWaveformOverview(canvasEl, audioBuffer, playheadFrac, durationSec){
+    const ctx = canvasEl.getContext('2d');
+    const w = canvasEl.width, h = canvasEl.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#f4f4f0';
+    ctx.fillRect(0,0,w,h);
+
+    const mid = h/2;
+
+    // subtle horizontal center + quarter lines for amplitude reference
+    ctx.strokeStyle = '#e2e2dc';
+    ctx.lineWidth = 1;
+    [0.25, 0.5, 0.75].forEach(f => {
+      const y = h*f;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    });
+
+    const data = audioBuffer.getChannelData(0);
+    const step = Math.ceil(data.length / w);
+    ctx.strokeStyle = '#1f9d5c';
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    for (let x = 0; x < w; x++){
+      let min = 1, max = -1;
+      const start = x*step;
+      for (let i = 0; i < step; i++){
+        const v = data[start+i] || 0;
+        if (v < min) min = v;
+        if (v > max) max = v;
+      }
+      ctx.moveTo(x, mid + min*mid*0.9);
+      ctx.lineTo(x, mid + max*mid*0.9);
+    }
+    ctx.stroke();
+
+    if (durationSec){
+      ctx.fillStyle = '#8a8a83';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      const nTicks = 6;
+      for (let i = 0; i <= nTicks; i++){
+        const frac = i/nTicks;
+        const x = frac*w;
+        ctx.strokeStyle = '#eaeae5';
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+        const label = fmtTime(frac*durationSec);
+        const lx = i === nTicks ? w - ctx.measureText(label).width - 4 : (i === 0 ? 4 : x - 20);
+        ctx.fillText(label, lx, h - 6);
+      }
+    }
+
+    if (typeof playheadFrac === 'number'){
+      const x = playheadFrac*w;
+      ctx.strokeStyle = '#111111';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(x,0); ctx.lineTo(x,h);
+      ctx.stroke();
+    }
+  }
+
+  // ---------------- Drawing: spectrum screen ----------------
+  let FREQ_MIN = 50;
+  let FREQ_MAX = 1000;
+  let freqScaleMode = 'linear'; // 'linear' | 'log'
+  let OCTAVE_FRACTION = 1/24; // fractional-octave smoothing; 0 = off (raw)
+
+  // Canvas x-position (0..w) for a given frequency, honoring the current scale mode.
+  function freqToX(freq, w){
+    const f = Math.max(FREQ_MIN, Math.min(FREQ_MAX, freq));
+    if (freqScaleMode === 'log'){
+      const lo = Math.log10(Math.max(1, FREQ_MIN));
+      const hi = Math.log10(Math.max(lo + 0.0001, FREQ_MAX));
+      return ((Math.log10(Math.max(1, f)) - lo) / (hi - lo)) * w;
+    }
+    return ((f - FREQ_MIN) / (FREQ_MAX - FREQ_MIN)) * w;
+  }
+
+  // Frequency for a given canvas x-position (0..w), honoring the current scale mode.
+  function xToFreq(x, w){
+    const frac = Math.min(1, Math.max(0, x / w));
+    if (freqScaleMode === 'log'){
+      const lo = Math.log10(Math.max(1, FREQ_MIN));
+      const hi = Math.log10(Math.max(lo + 0.0001, FREQ_MAX));
+      return Math.pow(10, lo + frac*(hi - lo));
+    }
+    return FREQ_MIN + frac*(FREQ_MAX - FREQ_MIN);
+  }
+
+  // Tick frequencies for the x-axis: evenly spaced for linear, 1-2-5 per
+  // decade for log (the conventional way to label a log frequency axis).
+  function computeFreqTicks(){
+    const ticks = [];
+    if (freqScaleMode === 'log'){
+      const lo = Math.max(1, FREQ_MIN), hi = FREQ_MAX;
+      let mag = Math.pow(10, Math.floor(Math.log10(lo)));
+      let guard = 0;
+      while (mag <= hi && guard < 20){
+        [1,2,5].forEach(m => {
+          const v = mag*m;
+          if (v >= lo && v <= hi) ticks.push(Math.round(v*100)/100);
+        });
+        mag *= 10;
+        guard++;
+      }
+      if (ticks.length < 2) return [FREQ_MIN, FREQ_MAX];
+      return ticks;
+    }
+    const n = 6;
+    for (let i = 0; i <= n; i++){
+      ticks.push(Math.round(FREQ_MIN + (i/n)*(FREQ_MAX - FREQ_MIN)));
+    }
+    return ticks;
+  }
+
+  // Averages `values` across a fractional-octave window centered on bin `idx`
+  // (bins are assumed linearly spaced at `binHz` apart).
+  function octaveAverage(values, binHz, idx, fraction){
+    const f = idx * binHz;
+    if (f <= 0) return values[idx];
+    const factor = Math.pow(2, fraction/2);
+    let lo = Math.max(0, Math.round((f/factor)/binHz));
+    let hi = Math.min(values.length - 1, Math.round((f*factor)/binHz));
+    if (hi < lo) hi = lo;
+    let sum = 0;
+    for (let j = lo; j <= hi; j++) sum += values[j];
+    return sum / (hi - lo + 1);
+  }
+
+  // Smoothed dBFS level at an arbitrary frequency, for the draggable cursor
+  // and for per-pixel curve rendering (works for both linear and log axes).
+  function getSmoothedDbAtFreq(capture, freq){
+    const binHz = capture.sampleRate / capture.N;
+    const idx = Math.max(0, Math.min(capture.mags.length - 1, Math.round(freq / binHz)));
+    const avgMag = octaveAverage(capture.mags, binHz, idx, OCTAVE_FRACTION);
+    return 20*Math.log10(avgMag + 1e-12);
+  }
+
+  function drawGrid(ctx, w, h){
+    ctx.strokeStyle = '#e2e2dc';
+    ctx.lineWidth = 1;
+    computeFreqTicks().forEach(f => {
+      const x = freqToX(f, w);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      ctx.fillStyle = '#6b6b64';
+      ctx.font = '12px "JetBrains Mono", monospace';
+      const label = (f >= 1000 ? (f/1000).toFixed(f % 1000 === 0 ? 0 : 1) + 'k' : f) + ' Hz';
+      const lx = Math.min(w - ctx.measureText(label).width - 4, Math.max(4, x + 5));
+      ctx.fillText(label, lx, h - 8);
+    });
+    for (let i = 1; i < 6; i++){
+      const y = (h/6)*i;
+      ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+    }
+  }
+
+  function liveDraw(){
+    if (!isPlaying) return;
+    const ctx = fftCanvas.getContext('2d');
+    const w = fftCanvas.width, h = fftCanvas.height;
+    const data = new Float32Array(analyser.frequencyBinCount);
+    analyser.getFloatFrequencyData(data);
+
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx, w, h);
+
+    const sr = audioCtx.sampleRate;
+    const fftSize = analyser.fftSize;
+    const binHz = sr / fftSize;
+    const minDb = analyser.minDecibels, maxDb = analyser.maxDecibels;
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#0f8a4c';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(15,138,76,0.35)';
+    ctx.shadowBlur = 5;
+    for (let x = 0; x < w; x++){
+      const freq = xToFreq(x, w);
+      const idx = Math.max(0, Math.min(data.length - 1, Math.round(freq/binHz)));
+      const db = octaveAverage(data, binHz, idx, OCTAVE_FRACTION);
+      const norm = Math.max(0, Math.min(1, (db - minDb)/(maxDb - minDb)));
+      const y = h - norm*h;
+      if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    rafId = requestAnimationFrame(liveDraw);
+  }
+
+  function drawFrozenSpectrum(capture){
+    const ctx = fftCanvas.getContext('2d');
+    const w = fftCanvas.width, h = fftCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    drawGrid(ctx, w, h);
+
+    const { normOffset } = capture;
+    const dbMin = -90, dbMax = 0;
+
+    // Left-side axis: relative dB (peak = 100 dB), derived from the same
+    // dBFS gridlines drawGrid() already lays down horizontally.
+    ctx.fillStyle = '#6b6b64';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    for (let i = 0; i <= 6; i++){
+      const dbfsAtLine = dbMax - (i/6)*(dbMax - dbMin);
+      const relAtLine = dbfsAtLine + normOffset;
+      const y = (h/6)*i;
+      ctx.fillText(relAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+    }
+
+    ctx.beginPath();
+    ctx.strokeStyle = '#b5690a';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = 'rgba(181,105,10,0.3)';
+    ctx.shadowBlur = 5;
+    for (let x = 0; x < w; x++){
+      const freq = xToFreq(x, w);
+      const dbfs = getSmoothedDbAtFreq(capture, freq);
+      const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+      const norm = (db - dbMin)/(dbMax - dbMin);
+      const y = h - norm*h;
+      if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // mark strongest peak within the displayed frequency range
+    const peaksInRange = capture.peaks.filter(p => p.freq >= FREQ_MIN && p.freq <= FREQ_MAX);
+    if (peaksInRange.length){
+      const top = peaksInRange[0];
+      const x = freqToX(top.freq, w);
+      ctx.strokeStyle = 'rgba(181,105,10,0.45)';
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#b5690a';
+      ctx.font = '13px "JetBrains Mono", monospace';
+      const lx = Math.min(w-150, x+8);
+      ctx.fillText(fmtHz(top.freq), lx, 18);
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.fillText(`${(top.db+normOffset).toFixed(1)} dB rel  /  ${top.db.toFixed(1)} dBFS`, lx, 33);
+    }
+
+    // draggable readout cursor (independent of the peak marker)
+    if (cursorFreq != null && cursorFreq >= FREQ_MIN && cursorFreq <= FREQ_MAX){
+      const cx = freqToX(cursorFreq, w);
+      const dbfs = getSmoothedDbAtFreq(capture, cursorFreq);
+      const clamped = Math.max(dbMin, Math.min(dbMax, dbfs));
+      const cy = h - ((clamped - dbMin)/(dbMax - dbMin)) * h;
+
+      ctx.strokeStyle = '#2f6fb0';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,h); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#2f6fb0';
+      ctx.beginPath(); ctx.arc(cx, cy, 4.5, 0, Math.PI*2); ctx.fill();
+
+      const relDb = dbfs + normOffset;
+      const labelY = h - 50;
+      const clx = Math.min(w-155, Math.max(4, cx+8));
+      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.fillText(fmtHz(cursorFreq), clx, labelY);
+      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.fillText(`${relDb.toFixed(1)} dB rel  /  ${dbfs.toFixed(1)} dBFS`, clx, labelY+15);
+    }
+  }
+
+  function resetScreen(mode){
+    screenBadge.className = 'screen-badge' + (mode === 'live' ? ' live' : mode === 'frozen' ? ' frozen' : '');
+    screenBadge.textContent = mode === 'live' ? 'live' : mode === 'frozen' ? 'captured' : 'idle';
+    if (mode === 'idle'){
+      const ctx = fftCanvas.getContext('2d');
+      ctx.clearRect(0,0,fftCanvas.width, fftCanvas.height);
+      drawGrid(ctx, fftCanvas.width, fftCanvas.height);
+      screenStamp.textContent = '';
+    }
+  }
+
+  // ---------------- Capture + data sheet ----------------
+  const PEAK_TARGET_DB = 100;
+
+  function captureSpectrum(entry, time){
+    const capture = computeSpectrumAt(entry.audioBuffer, time, 4096, 65536);
+    // Normalize so the strongest peak reads as 100 dB (relative scale),
+    // everything else scaled down by the same fixed offset.
+    capture.normOffset = capture.peaks.length ? (PEAK_TARGET_DB - capture.peaks[0].db) : 0;
+    lastCapture = capture;
+    resetScreen('frozen');
+    drawFrozenSpectrum(capture);
+    screenStamp.textContent = `CAPTURED @ ${fmtTime(time)}`;
+    renderSheet(entry, capture);
+  }
+
+  function resetSheet(){
+    sheetSub.textContent = '';
+    sheetBody.innerHTML = '<div class="placeholder">Press play, then press stop at any moment — a spectrum snapshot and data sheet will be captured at that exact point in the recording.</div>';
+    exportBtn.disabled = true;
+  }
+
+  function renderSheet(entry, capture){
+    sheetSub.textContent = `— ${entry.name} @ ${fmtTime(capture.time)}`;
+    const top = capture.peaks[0];
+    const info = entry.wavInfo;
+    const off = capture.normOffset;
+
+    const statsHtml = `
+      <div class="stat-grid">
+        <div class="stat"><div class="k">Peak Frequency</div><div class="v accent">${top ? fmtHz(top.freq) : '—'}</div></div>
+        <div class="stat"><div class="k">Peak Level (rel)</div><div class="v accent">${top ? (top.db+off).toFixed(1)+' dB' : '—'}</div></div>
+        <div class="stat"><div class="k">Peak Level (dBFS)</div><div class="v">${top ? top.db.toFixed(1)+' dB' : '—'}</div></div>
+        <div class="stat"><div class="k">Window RMS</div><div class="v">${capture.rms.toFixed(4)}</div></div>
+        <div class="stat"><div class="k">Analysis Window</div><div class="v">${capture.M} smp</div></div>
+        <div class="stat"><div class="k">FFT Size (padded)</div><div class="v">${capture.N}</div></div>
+        <div class="stat"><div class="k">Sample Rate</div><div class="v">${capture.sampleRate.toLocaleString()} Hz</div></div>
+        <div class="stat"><div class="k">Channels</div><div class="v">${info ? info.numChannels : entry.audioBuffer.numberOfChannels}</div></div>
+        <div class="stat"><div class="k">Bit Depth</div><div class="v">${info ? info.bitsPerSample+'-bit' : '—'}</div></div>
+        <div class="stat"><div class="k">Duration</div><div class="v">${fmtTime(entry.audioBuffer.duration)}</div></div>
+      </div>
+      <div class="placeholder" style="text-align:left;padding:0 2px 18px;">
+        "Rel" is a normalized scale where the strongest peak in this capture is set to 100 dB and everything else is scaled down by the same fixed amount — it is not calibrated acoustic SPL. "dBFS" is the raw, uncalibrated digital level (0 dB = loudest a sample can be; negative is normal).
+      </div>
+    `;
+
+    const rows = capture.peaks.length ? capture.peaks.map((p,i) => `
+      <tr>
+        <td class="rank">${i+1}</td>
+        <td class="freq">${fmtHz(p.freq)}</td>
+        <td>${(p.db+off).toFixed(1)} dB</td>
+        <td>${p.db.toFixed(1)} dBFS</td>
+        <td>${p.mag.toExponential(2)}</td>
+      </tr>`).join('') : `<tr><td colspan="5" style="color:var(--text-faint);">No distinct peaks above the noise floor at this instant.</td></tr>`;
+
+    const tableHtml = `
+      <table class="peaks">
+        <thead><tr><th>#</th><th>Frequency</th><th>Level (rel)</th><th>Level (dBFS)</th><th>Magnitude</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    sheetBody.innerHTML = statsHtml + tableHtml;
+    exportBtn.disabled = false;
+  }
+
+  exportBtn.addEventListener('click', () => {
+    if (!lastCapture) return;
+    const entry = library.find(f => f.id === activeId);
+    const capture = lastCapture;
+    const off = capture.normOffset;
+    let csv = 'Waveform Lab — Spectrum Data Sheet\n';
+    csv += `File,${entry ? entry.name : ''}\n`;
+    csv += `Capture Time (s),${capture.time.toFixed(6)}\n`;
+    csv += `Sample Rate (Hz),${capture.sampleRate}\n`;
+    csv += `Analysis Window (samples),${capture.M}\n`;
+    csv += `FFT Size (zero-padded),${capture.N}\n`;
+    csv += `Window RMS,${capture.rms.toFixed(6)}\n`;
+    csv += `Normalization,Peak set to ${PEAK_TARGET_DB} dB (rel), offset ${off.toFixed(2)} dB applied to dBFS\n\n`;
+    csv += 'Top Peaks\nRank,Frequency (Hz),Level (rel dB),Level (dBFS),Magnitude\n';
+    capture.peaks.forEach((p,i) => {
+      csv += `${i+1},${p.freq.toFixed(2)},${(p.db+off).toFixed(2)},${p.db.toFixed(2)},${p.mag.toExponential(4)}\n`;
+    });
+    csv += '\nFull Spectrum\nFrequency (Hz),Level (rel dB),Level (dBFS),Magnitude\n';
+    for (let k = 0; k < capture.freqs.length; k++){
+      csv += `${capture.freqs[k].toFixed(2)},${(capture.dbs[k]+off).toFixed(2)},${capture.dbs[k].toFixed(2)},${capture.mags[k].toExponential(4)}\n`;
+    }
+    const blob = new Blob([csv], {type:'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const base = entry ? entry.name.replace(/\.wav$/i,'') : 'capture';
+    a.download = `${base}_spectrum_${capture.time.toFixed(2)}s.csv`;
+    a.click();
+  });
+
+  // ---------------- File input wiring ----------------
+  fileInput.addEventListener('change', (e) => addFiles(e.target.files));
+  ;['dragover','dragenter'].forEach(evtName => {
+    dropzone.addEventListener(evtName, (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ;['dragleave','drop'].forEach(evtName => {
+    dropzone.addEventListener(evtName, (e) => { e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  // ---------------- Init ----------------
+  resetScreen('idle');
+  renderCompareRows();
+  drawCompareGraph();
+  resetPreview();
+  updateFreqRangeLabels();
+})();
+</script>
+</body>
+</html>
