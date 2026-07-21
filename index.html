@@ -76,6 +76,11 @@
 
   /* ---------- Library ---------- */
   .dropzone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
     border:1px dashed var(--line);
     border-radius:var(--radius);
     padding:22px 12px;
@@ -92,7 +97,7 @@
     background:rgba(76,255,160,0.03);
   }
   .dropzone input{display:none;}
-  .dropzone .big{font-size:26px;display:block;margin-bottom:6px;}
+  .dropzone .big{font-size:26px;line-height:1;}
 
   .file-list{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto;}
   .file-item{
@@ -303,6 +308,108 @@
   }
   .legend-remove:hover{border-color:var(--danger);color:var(--danger);}
 
+  /* ---------- Home ---------- */
+  .home-intro{color:var(--text-dim);font-size:15px;line-height:1.7;max-width:640px;margin:0 0 26px;}
+  .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media (max-width:760px){.home-cards{grid-template-columns:1fr;}}
+  .home-card{
+    text-align:left;cursor:pointer;background:var(--panel);
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 26px;transition:border-color .15s, transform .15s, box-shadow .15s;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  .home-card:hover{
+    border-color:var(--phosphor-dim);transform:translateY(-2px);
+    box-shadow:0 6px 22px rgba(15,138,76,0.08);
+  }
+  .home-card .hc-icon{
+    width:46px;height:46px;border-radius:50%;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    font-size:20px;color:var(--phosphor);background:var(--panel-raised);
+  }
+  .home-card.amber .hc-icon{color:var(--amber);}
+  .home-card:hover .hc-icon{border-color:var(--phosphor-dim);}
+  .home-card .hc-title{font-size:18px;font-weight:700;letter-spacing:0.03em;color:var(--text);}
+  .home-card .hc-desc{font-size:13.5px;color:var(--text-dim);line-height:1.65;}
+  .home-card .hc-go{
+    font-size:12px;letter-spacing:0.09em;text-transform:uppercase;color:var(--phosphor);
+    display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:4px;
+  }
+  .home-card.amber .hc-go{color:var(--amber);}
+
+  /* ---------- Tap analyser page ---------- */
+  .subtabs{display:flex;gap:8px;margin:-6px 0 18px;}
+  .subtab-btn{
+    background:var(--panel-raised);border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;
+    padding:7px 14px;border-radius:var(--radius);cursor:pointer;transition:border-color .15s,color .15s;
+  }
+  .subtab-btn:hover{border-color:var(--phosphor-dim);}
+  .subtab-btn.active{border-color:var(--phosphor);color:var(--phosphor);font-weight:600;}
+
+  .tap-rows{display:flex;flex-direction:column;gap:16px;max-height:640px;overflow-y:auto;}
+  .tap-row{border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .tap-row .tr-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;
+  }
+  .tap-row .tr-name{
+    font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .tap-row .tr-remove{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:13px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tap-row .tr-remove:hover{border-color:var(--danger);color:var(--danger);}
+  canvas.tr-wave{width:100%;height:70px;display:block;border-radius:var(--radius);margin-bottom:10px;}
+  .tap-row .tr-fields{display:flex;gap:10px;flex-wrap:wrap;}
+  .tap-field{display:flex;flex-direction:column;gap:4px;}
+  .tap-field label{font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-faint);}
+  .tap-field input{
+    width:96px;font-family:inherit;font-size:13px;padding:7px 9px;
+    border:1px solid var(--line);border-radius:var(--radius);background:#ffffff;color:var(--text);
+  }
+  .tap-field input::placeholder{color:var(--text-faint);}
+
+  details.tap-advanced{margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--radius);padding:2px 14px;}
+  details.tap-advanced summary{
+    cursor:pointer;padding:10px 0;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);
+  }
+  details.tap-advanced .adv-grid{display:flex;gap:14px;flex-wrap:wrap;padding-bottom:14px;}
+
+  button.run-btn{
+    width:100%;margin-top:4px;
+    background:var(--phosphor);border:1px solid var(--phosphor);color:#ffffff;
+    font-family:inherit;font-size:13px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;
+    padding:13px;border-radius:var(--radius);cursor:pointer;transition:opacity .15s;
+  }
+  button.run-btn:hover{opacity:0.88;}
+  button.run-btn:disabled{opacity:0.4;cursor:not-allowed;}
+
+  .tap-status{font-size:13px;color:var(--text-dim);margin:10px 2px;min-height:18px;}
+  .tap-status.err{color:var(--danger);}
+
+  canvas#scatterCanvas{width:100%;height:440px;display:block;cursor:default;}
+
+  .scatter-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;}
+  .scatter-legend .sl-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
+  .scatter-legend .sl-swatch{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
+
+  .variance-block{margin-top:18px;}
+  .variance-block .vb-title{
+    font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .variance-block .vb-title .swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  table.variance{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px;}
+  table.variance th{
+    text-align:left;font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;
+    color:var(--text-faint);border-bottom:1px solid var(--line);padding:8px 9px;font-weight:600;
+  }
+  table.variance td{padding:8px 9px;border-bottom:1px solid var(--line-soft);color:var(--text-dim);}
+  table.variance td.freq{color:var(--phosphor);font-weight:600;}
+  table.variance tbody tr:first-child td.freq{color:var(--amber);}
+
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
@@ -320,12 +427,33 @@
   </header>
 
   <div class="tabs">
-    <button class="tab-btn active" data-page="analyse">Analyse</button>
+    <button class="tab-btn active" data-page="home">Home</button>
+    <button class="tab-btn" data-page="analyze">Waveform</button>
     <button class="tab-btn" data-page="compare">Compare</button>
+    <button class="tab-btn" data-page="tap">Tap Analyser</button>
+  </div>
+
+  <!-- ============ PAGE: HOME ============ -->
+  <div class="page active" id="page-home">
+    <p class="home-intro">Pick a tool. Waveform Lab plays back a single .wav file and freezes a spectrum snapshot at any moment. Tap Analyser detects multiple tap/pluck transients across one or more .wav files, FFTs each one, and plots the most consistent frequencies.</p>
+    <div class="home-cards">
+      <div class="home-card" data-goto="analyze">
+        <div class="hc-icon">&#9658;</div>
+        <div class="hc-title">Waveform Lab</div>
+        <div class="hc-desc">Load .wav files, play them back, and freeze a spectrum snapshot at any instant. Compare snapshots from multiple files or moments on one overlay graph.</div>
+        <div class="hc-go">Open &rarr;</div>
+      </div>
+      <div class="home-card amber" data-goto="tap">
+        <div class="hc-icon">&#10005;</div>
+        <div class="hc-title">Tap Analyser</div>
+        <div class="hc-desc">Feed in one or more .wav files of taps or plucks. Auto-detects each transient (with optional skip-start / skip-end trimming), FFTs every event, and scatters the most common frequencies across files with a variance summary.</div>
+        <div class="hc-go">Open &rarr;</div>
+      </div>
+    </div>
   </div>
 
   <!-- ============ PAGE: ANALYSE ============ -->
-  <div class="page active" id="page-analyse">
+  <div class="page" id="page-analyze">
   <div class="grid">
 
     <!-- LEFT: LIBRARY -->
@@ -491,9 +619,65 @@
   </div>
   </div>
 
+  <!-- ============ PAGE: TAP ANALYZER ============ -->
+  <div class="page" id="page-tap">
+  <div class="grid">
+
+    <!-- LEFT: LIBRARY + PER-FILE SKIP CONFIG -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Library</span><span class="count" id="tapFileCount">0 loaded</span></div>
+        <label class="dropzone" id="dropzoneTap">
+          <span class="big">+</span>
+          Load .wav file(s)
+          <input type="file" id="fileInputTap" accept=".wav,audio/wav,audio/x-wav" multiple>
+        </label>
+        <div class="empty-note" style="margin-bottom:10px;">Leave Skip Start blank to auto-detect the end of any leading speech. Skip End trims everything after that many seconds (use it to cut trailing noise).</div>
+        <div class="tap-rows" id="tapRows">
+          <div class="empty-note">No files yet.</div>
+        </div>
+
+        <details class="tap-advanced">
+          <summary>Advanced settings</summary>
+          <div class="adv-grid">
+            <div class="tap-field"><label>Events / file</label><input type="number" id="advNumEvents" value="10" min="1" step="1"></div>
+            <div class="tap-field"><label>Min gap (s)</label><input type="number" id="advMinGap" value="0.3" min="0.01" step="0.05"></div>
+            <div class="tap-field"><label>Min freq (Hz)</label><input type="number" id="advMinFreq" value="50" min="1" step="1"></div>
+            <div class="tap-field"><label>Max freq (Hz)</label><input type="number" id="advMaxFreq" value="1000" min="2" step="1"></div>
+            <div class="tap-field"><label>Top-N basis</label><input type="number" id="advTopNBasis" value="10" min="1" step="1"></div>
+            <div class="tap-field"><label>Cluster tol. (Hz)</label><input type="number" id="advTolerance" value="2" min="0.1" step="0.1"></div>
+          </div>
+        </details>
+
+        <button class="run-btn" id="runTapBtn">Run Analysis</button>
+        <div class="tap-status" id="tapStatus"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Frequency Scatter <span class="freq-range-label" style="color:var(--text-faint);">(top 5 most common frequencies per file, average % vs. Hz)</span></span></div>
+        <div class="screen">
+          <canvas id="scatterCanvas" width="1200" height="440"></canvas>
+        </div>
+        <div class="scatter-legend" id="scatterLegend"></div>
+      </div>
+
+      <div class="panel" id="tapResultsPanel">
+        <div class="panel-label"><span>Per-File Variance Summary</span></div>
+        <div id="tapResultsBody">
+          <div class="placeholder">Load .wav files on the left and press Run Analysis — each file's top 5 most consistent tap/pluck frequencies will be listed here, with a combined scatter graph above.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
   <footer>
     Files are decoded and held in browser memory only — nothing leaves this tab, and the library resets on page reload.<br>
-    Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centered on the moment playback stopped.
+    Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centred on the moment playback stopped.
   </footer>
 
 </div>
@@ -520,7 +704,7 @@
   let pendingCaptureTime = null;
 
   // Compare page state
-  const TRACE_COLORS = ['#0f8a4c','#b5690a','#2f6fb0','#a02b9e','#c23b2e','#0a8a8a','#8a7a00','#555550'];
+  const TRACE_COLOURS = ['#0f8a4c','#b5690a','#2f6fb0','#a02b9e','#c23b2e','#0a8a8a','#8a7a00','#555550'];
   let compareTraces = [];    // {id, color, entryName, time, capture}
   let compareIdSeq = 0;
   let compareCursorFreq = null;
@@ -562,6 +746,19 @@
   const clearCompareBtn = el('clearCompareBtn');
   const previewCanvas = el('previewCanvas');
   const previewLabel = el('previewLabel');
+
+  // Tap analyser page
+  const fileInputTap = el('fileInputTap');
+  const dropzoneTap = el('dropzoneTap');
+  const tapFileCount = el('tapFileCount');
+  const tapRows = el('tapRows');
+  const runTapBtn = el('runTapBtn');
+  const tapStatus = el('tapStatus');
+  const scatterCanvas = el('scatterCanvas');
+  const scatterLegend = el('scatterLegend');
+  const tapResultsBody = el('tapResultsBody');
+  let tapLibrary = [];      // {id, name, size, url, audioBuffer, skipStart:'', skipEnd:''}
+  let tapRunning = false;
 
   // ---------------- Utils ----------------
   function fmtTime(t){
@@ -641,7 +838,411 @@
 
   function nextPow2(n){ let p = 1; while (p < n) p <<= 1; return p; }
 
-  // Compute windowed FFT centered at `time` (seconds) on an AudioBuffer.
+  // ---------------- Tap Analyser DSP (client-side port of multi_variance.py / tap_scatter.py) ----------------
+  function sleep0(){ return new Promise(r => setTimeout(r, 0)); }
+
+  function ifftInPlace(re, im){
+    const n = re.length;
+    for (let i = 0; i < n; i++) im[i] = -im[i];
+    fftInPlace(re, im);
+    for (let i = 0; i < n; i++){ re[i] = re[i]/n; im[i] = -im[i]/n; }
+  }
+
+  // Arbitrary-length DFT via Bluestein's algorithm (chirp z-transform), built
+  // on the power-of-2 fftInPlace/ifftInPlace above. Needed because the Hilbert
+  // transform (used for the envelope) is a broadband, all-pass phase operation
+  // tied to the *exact* signal length — unlike a plain magnitude spectrum,
+  // zero-padding it before the FFT changes the result almost everywhere, not
+  // just at the edges. scipy.signal.hilbert(x) uses N = len(x) exactly, so we
+  // need to do the same instead of rounding up to the next power of 2.
+  function bluesteinDFT(reIn, imIn, inverse){
+    const n = reIn.length;
+    if ((n & (n-1)) === 0){
+      // already a power of 2 (or 0/1) — use the fast path directly
+      const re = Float64Array.from(reIn), im = Float64Array.from(imIn);
+      if (n > 1){ if (inverse) ifftInPlace(re, im); else fftInPlace(re, im); }
+      return { re, im };
+    }
+
+    const sign = inverse ? 1 : -1; // exp(sign * i*pi*k^2/n)
+    const cosT = new Float64Array(n), sinT = new Float64Array(n);
+    for (let k = 0; k < n; k++){
+      const kk = (k*k) % (2*n); // keep the argument small for float precision
+      const ang = sign * Math.PI * kk / n;
+      cosT[k] = Math.cos(ang);
+      sinT[k] = Math.sin(ang);
+    }
+
+    const M = nextPow2(2*n - 1);
+    const aRe = new Float64Array(M), aIm = new Float64Array(M);
+    for (let k = 0; k < n; k++){
+      aRe[k] = reIn[k]*cosT[k] - imIn[k]*sinT[k];
+      aIm[k] = reIn[k]*sinT[k] + imIn[k]*cosT[k];
+    }
+
+    const bRe = new Float64Array(M), bIm = new Float64Array(M);
+    bRe[0] = cosT[0]; bIm[0] = -sinT[0];
+    for (let k = 1; k < n; k++){
+      bRe[k] = cosT[k]; bIm[k] = -sinT[k];
+      bRe[M-k] = cosT[k]; bIm[M-k] = -sinT[k];
+    }
+
+    fftInPlace(aRe, aIm);
+    fftInPlace(bRe, bIm);
+    for (let k = 0; k < M; k++){
+      const r = aRe[k]*bRe[k] - aIm[k]*bIm[k];
+      const i = aRe[k]*bIm[k] + aIm[k]*bRe[k];
+      aRe[k] = r; aIm[k] = i;
+    }
+    ifftInPlace(aRe, aIm);
+
+    const outRe = new Float64Array(n), outIm = new Float64Array(n);
+    for (let k = 0; k < n; k++){
+      outRe[k] = aRe[k]*cosT[k] - aIm[k]*sinT[k];
+      outIm[k] = aRe[k]*sinT[k] + aIm[k]*cosT[k];
+    }
+    if (inverse){
+      for (let k = 0; k < n; k++){ outRe[k] /= n; outIm[k] /= n; }
+    }
+    return { re: outRe, im: outIm };
+  }
+
+  function smoothMovingAvg(arr, winSamples){
+    winSamples = Math.max(1, winSamples|0);
+    const n = arr.length;
+    const out = new Float64Array(n);
+    const prefix = new Float64Array(n+1);
+    for (let i = 0; i < n; i++) prefix[i+1] = prefix[i] + arr[i];
+    const half = Math.floor(winSamples/2);
+    for (let i = 0; i < n; i++){
+      let lo = i - half, hi = lo + winSamples;
+      if (lo < 0) lo = 0;
+      if (hi > n) hi = n;
+      out[i] = (prefix[hi] - prefix[lo]) / Math.max(1, (hi - lo));
+    }
+    return out;
+  }
+
+  // Amplitude envelope via FFT-based Hilbert transform (analytic signal),
+  // computed at the exact sample count (see bluesteinDFT above) to match
+  // scipy.signal.hilbert(data).
+  function computeEnvelopeHilbert(samples, smoothSamples){
+    const n = samples.length;
+    const zeros = new Float64Array(n);
+    const { re, im } = bluesteinDFT(samples, zeros, false);
+    const half = Math.floor(n/2);
+    // Analytic-signal mask: double the positive frequencies, zero the negative
+    // ones, leave DC (and the Nyquist bin, if n is even) untouched — same
+    // recipe as scipy.signal.hilbert. For even n the Nyquist bin is index
+    // `half` (left at ×1); for odd n there is no separate Nyquist bin, so the
+    // doubled range extends one bin further, through index `half`.
+    const doubleUpTo = (n % 2 === 0) ? half - 1 : half; // inclusive
+    for (let k = 1; k <= doubleUpTo; k++){ re[k] *= 2; im[k] *= 2; }
+    for (let k = half+1; k < n; k++){ re[k] = 0; im[k] = 0; }
+    const { re: outRe, im: outIm } = bluesteinDFT(re, im, true);
+    const env = new Float64Array(n);
+    for (let i = 0; i < n; i++) env[i] = Math.hypot(outRe[i], outIm[i]);
+    return smoothMovingAvg(env, smoothSamples);
+  }
+
+  // Estimate where leading speech/noise ends: longest "quiet" run in the first
+  // half of the recording, cutting at its midpoint. Mirrors auto_detect_speech_end.
+  function autoDetectSkipStart(samples, sr){
+    const smoothSamples = Math.max(1, Math.round(sr*50/1000));
+    const env = computeEnvelopeHilbert(samples, smoothSamples);
+    const half = Math.floor(env.length/2);
+    const firstHalf = env.subarray(0, half);
+    const sorted = Float64Array.from(firstHalf).sort();
+    const threshold = sorted.length ? sorted[Math.floor(0.25*(sorted.length-1))] : 0;
+    let bestStart = 0, bestLen = 0, curStart = 0, curLen = 0;
+    for (let i = 0; i < half; i++){
+      if (firstHalf[i] < threshold){
+        if (curLen === 0) curStart = i;
+        curLen++;
+        if (curLen > bestLen){ bestLen = curLen; bestStart = curStart; }
+      } else curLen = 0;
+    }
+    const cutoffSample = bestStart + Math.floor(bestLen/2);
+    return cutoffSample / sr;
+  }
+
+  // Topographic prominence of a local maximum at `idx`: scan outward until a
+  // taller point or the array edge, tracking the lowest value seen on each
+  // side; prominence = height - the higher (shallower) of the two floors.
+  // Mirrors scipy.signal.peak_prominences with no wlen limit.
+  function peakProminence(arr, idx){
+    const height = arr[idx];
+    let leftMin = height;
+    for (let i = idx-1; i >= 0; i--){
+      if (arr[i] > height) break;
+      if (arr[i] < leftMin) leftMin = arr[i];
+    }
+    let rightMin = height;
+    for (let i = idx+1; i < arr.length; i++){
+      if (arr[i] > height) break;
+      if (arr[i] < rightMin) rightMin = arr[i];
+    }
+    return height - Math.max(leftMin, rightMin);
+  }
+
+  // Detect tap/pluck onsets: envelope onset-strength peaks, keep the strongest
+  // `numEvents` by envelope value shortly after onset, then return in time order.
+  function detectTapEvents(samples, sr, numEvents, minGapSec, skipStartSec){
+    const skipSamples = Math.max(0, Math.round(skipStartSec*sr));
+    const region = samples.subarray(Math.min(skipSamples, samples.length));
+    if (region.length < 32) throw new Error('not enough audio after Skip Start');
+
+    const smoothSamples = Math.max(1, Math.round(sr*5/1000));
+    const env = computeEnvelopeHilbert(region, smoothSamples);
+    const onset = new Float64Array(env.length);
+    for (let i = 1; i < env.length; i++) onset[i] = Math.max(0, env[i] - env[i-1]);
+
+    const minDistance = Math.max(1, Math.round(minGapSec*sr));
+    let maxOnset = 0;
+    for (let i = 0; i < onset.length; i++) if (onset[i] > maxOnset) maxOnset = onset[i];
+    const prominenceThresh = maxOnset > 0 ? maxOnset*0.05 : 0;
+
+    const rawCandidates = [];
+    for (let i = 1; i < onset.length-1; i++){
+      if (onset[i] > prominenceThresh && onset[i] >= onset[i-1] && onset[i] > onset[i+1]) rawCandidates.push(i);
+    }
+
+    // Filter by true topographic prominence, matching scipy's find_peaks(...,
+    // prominence=...) rather than approximating it with a bare height check.
+    // Safe to prefilter by height first: prominence <= height always, so this
+    // never discards a candidate that would have passed the prominence test.
+    const candidates = rawCandidates.filter(idx => peakProminence(onset, idx) >= prominenceThresh);
+    if (!candidates.length) throw new Error('no tap/pluck transients detected — try adjusting Skip Start or Min Gap');
+
+    const order = candidates.slice().sort((a,b) => onset[b]-onset[a]);
+    const kept = [];
+    for (const idx of order){
+      if (kept.every(k => Math.abs(k-idx) >= minDistance)) kept.push(idx);
+    }
+
+    const lookAhead = Math.round(0.02*sr);
+    const scored = kept.map(idx => ({ idx, score: env[Math.min(idx+lookAhead, env.length-1)] }));
+    scored.sort((a,b) => b.score-a.score);
+    const nTake = Math.min(numEvents, scored.length);
+    const chosen = scored.slice(0, nTake).map(s => s.idx).sort((a,b) => a-b);
+
+    const peakIndices = chosen.map(c => c + skipSamples);
+
+    return peakIndices.map(p => {
+      const lo = Math.max(0, p - Math.round(0.01*sr));
+      const hi = Math.min(samples.length, p + Math.round(0.03*sr));
+      let bestI = lo, bestV = -Infinity;
+      for (let i = lo; i < hi; i++){
+        const v = Math.abs(samples[i]);
+        if (v > bestV){ bestV = v; bestI = i; }
+      }
+      return bestI;
+    }).sort((a,b) => a-b);
+  }
+
+  function extractEventWindow(samples, sr, peakIdx, offsetSec, durationSec){
+    const startIdx = peakIdx + Math.round(offsetSec*sr);
+    if (startIdx >= samples.length) throw new Error('offset window exceeds file length for this event');
+    const endIdx = Math.min(startIdx + Math.round(durationSec*sr), samples.length);
+    return samples.slice(startIdx, endIdx);
+  }
+
+  function applyHann(arr){
+    const n = arr.length;
+    const out = new Float64Array(n);
+    for (let i = 0; i < n; i++){
+      const w = n > 1 ? 0.5 - 0.5*Math.cos(2*Math.PI*i/(n-1)) : 1;
+      out[i] = arr[i]*w;
+    }
+    return out;
+  }
+
+  // Zero-padded FFT magnitude spectrum (same M-real/N-padded convention as
+  // computeSpectrumAt above: padding only interpolates, it doesn't add resolution).
+  // Exact (unpadded) FFT magnitude spectrum, matching np.fft.rfft(data) bin-
+  // for-bin. We used to zero-pad this to interpolate a smoother curve, but
+  // that was wrong here: padding reveals extra fine-grained window-sidelobe
+  // ripple between the coarser raw bins, which can register as *extra* local
+  // maxima that don't exist as distinct samples in Python's coarser grid —
+  // changing which peaks win the top-N-basis / top-5-common comparison.
+  // Built on bluesteinDFT so M doesn't need to be a power of 2.
+  function computeFftMagExact(windowed, sr){
+    const M = windowed.length;
+    const zeros = new Float64Array(M);
+    const { re, im } = bluesteinDFT(windowed, zeros, false);
+    const half = Math.floor(M/2) + 1; // rfft length, same convention as np.fft.rfft
+    const freqs = new Float64Array(half);
+    const mags = new Float64Array(half);
+    for (let k = 0; k < half; k++){
+      freqs[k] = k*sr/M;
+      let mag = Math.hypot(re[k], im[k]) / M;
+      if (k > 0 && k < half-1) mag *= 2; // matches magnitude[1:-1] *= 2 in compute_fft_raw
+      mags[k] = mag;
+    }
+    return { freqs, mags, M };
+  }
+
+  function interpolatePeakFreq(freqs, mags, binIdx){
+    const n = mags.length;
+    if (binIdx <= 0 || binIdx >= n-1) return freqs[binIdx];
+    const toDb = v => 20*Math.log10(Math.max(v, 1e-12));
+    const alpha = toDb(mags[binIdx-1]), beta = toDb(mags[binIdx]), gamma = toDb(mags[binIdx+1]);
+    const denom = alpha - 2*beta + gamma;
+    if (Math.abs(denom) < 1e-9) return freqs[binIdx];
+    let p = 0.5*(alpha-gamma)/denom;
+    p = Math.max(-1, Math.min(1, p));
+    const binSpacing = freqs[1]-freqs[0];
+    return freqs[binIdx] + p*binSpacing;
+  }
+
+  // Top-N local-maxima peaks by linear magnitude within [minFreq,maxFreq].
+  function findTopNPeaksLinear(freqs, mags, nPeaks, minFreq, maxFreq, minSepBins){
+    let loIdx = -1, hiIdx = -1;
+    for (let k = 0; k < freqs.length; k++){
+      if (loIdx < 0 && freqs[k] >= minFreq) loIdx = k;
+      if (freqs[k] <= maxFreq) hiIdx = k;
+    }
+    if (loIdx < 0 || hiIdx < loIdx) return [];
+
+    const localMaxima = [];
+    for (let k = loIdx+1; k < hiIdx; k++){
+      if (mags[k] > mags[k-1] && mags[k] >= mags[k+1]) localMaxima.push(k);
+    }
+
+    let candidates;
+    if (!localMaxima.length){
+      const idxs = [];
+      for (let k = loIdx; k <= hiIdx; k++) idxs.push(k);
+      idxs.sort((a,b) => mags[b]-mags[a]);
+      candidates = idxs.slice(0, nPeaks);
+    } else {
+      const sorted = localMaxima.slice().sort((a,b) => mags[b]-mags[a]);
+      const kept = [];
+      for (const idx of sorted){
+        if (kept.every(k => Math.abs(k-idx) >= minSepBins)) kept.push(idx);
+      }
+      candidates = kept;
+    }
+    candidates = candidates.slice().sort((a,b) => mags[b]-mags[a]).slice(0, nPeaks);
+    const results = candidates.map(idx => ({ freq: interpolatePeakFreq(freqs, mags, idx), mag: mags[idx] }));
+    results.sort((a,b) => b.mag-a.mag);
+    return results;
+  }
+
+  // Normalise: top `topNBasis` peaks sum to 100%, every reported peak expressed as % of that sum.
+  function computeTopPeaksPct(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins){
+    const topLinear = findTopNPeaksLinear(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins);
+    if (!topLinear.length) throw new Error('no spectral peaks found to normalise against');
+    const basisSum = topLinear.reduce((s,p) => s+p.mag, 0);
+    if (basisSum <= 0) throw new Error('top peak magnitudes summed to zero');
+    const pct = topLinear.map(p => ({ freq: p.freq, pct: (p.mag/basisSum)*100 }));
+    pct.sort((a,b) => b.pct-a.pct);
+    return pct;
+  }
+
+  // Cluster peaks across events (within ±toleranceHz) and rank by appearances then avg %.
+  // Mirrors compute_common_frequencies in multi_variance.py.
+  function computeCommonFrequencies(eventResults, toleranceHz, topN){
+    const allPeaks = [];
+    eventResults.forEach(r => r.peaks.forEach(p => allPeaks.push({freq:p.freq, pct:p.pct, ev:r.eventNum})));
+    if (!allPeaks.length) return [];
+    allPeaks.sort((a,b) => a.freq-b.freq);
+
+    const clusters = [];
+    for (const pk of allPeaks){
+      let merged = false;
+      for (const c of clusters){
+        const mean = c.reduce((s,x) => s+x.freq, 0)/c.length;
+        if (Math.abs(pk.freq-mean) <= toleranceHz){ c.push(pk); merged = true; break; }
+      }
+      if (!merged) clusters.push([pk]);
+    }
+
+    const mean = arr => arr.reduce((s,x) => s+x, 0)/arr.length;
+    const std = arr => { const m = mean(arr); return Math.sqrt(mean(arr.map(x => (x-m)*(x-m)))); };
+
+    const summaries = clusters.map(cluster => {
+      const byEvent = new Map();
+      cluster.forEach(({freq,pct,ev}) => {
+        const cur = byEvent.get(ev);
+        if (!cur || pct > cur.pct) byEvent.set(ev, {freq,pct});
+      });
+      const vals = [...byEvent.values()];
+      const hz = vals.map(v => v.freq), pcts = vals.map(v => v.pct);
+      return {
+        freq: mean(hz), appearances: vals.length, avgPct: mean(pcts),
+        stdHz: std(hz), stdPct: std(pcts),
+        minPct: Math.min(...pcts), maxPct: Math.max(...pcts),
+        minHz: Math.min(...hz), maxHz: Math.max(...hz),
+      };
+    });
+
+    summaries.sort((a,b) => (b.appearances-a.appearances) || (b.avgPct-a.avgPct));
+    return summaries.slice(0, topN);
+  }
+
+  // Full per-file pipeline: skip-end trim, skip-start (auto or manual), detect
+  // events, FFT + normalise each, cluster into top-5 common frequencies.
+  async function analyseTapFile(entry, opts){
+    const audioBuffer = entry.audioBuffer;
+    const sr = audioBuffer.sampleRate;
+    const nCh = audioBuffer.numberOfChannels;
+    let samples;
+    if (nCh === 1){
+      samples = audioBuffer.getChannelData(0).slice();
+    } else {
+      const n = audioBuffer.length;
+      samples = new Float32Array(n);
+      for (let c = 0; c < nCh; c++){
+        const ch = audioBuffer.getChannelData(c);
+        for (let i = 0; i < n; i++) samples[i] += ch[i]/nCh;
+      }
+    }
+    let durationTotal = samples.length/sr;
+
+    const skipEndVal = (entry.skipEnd||'').trim();
+    if (skipEndVal !== ''){
+      const skipEndSec = Math.min(parseFloat(skipEndVal), durationTotal);
+      if (isFinite(skipEndSec) && skipEndSec > 0){
+        samples = samples.subarray(0, Math.max(1, Math.round(skipEndSec*sr)));
+        durationTotal = samples.length/sr;
+      }
+    }
+    await sleep0();
+
+    const skipStartVal = (entry.skipStart||'').trim();
+    const skipStartSec = skipStartVal !== '' ? parseFloat(skipStartVal) : autoDetectSkipStart(samples, sr);
+    await sleep0();
+
+    const peakIndices = detectTapEvents(samples, sr, opts.numEvents, opts.minGap, skipStartSec);
+    await sleep0();
+
+    const eventResults = [];
+    for (let i = 0; i < peakIndices.length; i++){
+      let windowData;
+      try { windowData = extractEventWindow(samples, sr, peakIndices[i], 0.01, 1.0); }
+      catch(e){ continue; }
+      if (windowData.length < 16) continue;
+
+      const windowed = applyHann(windowData);
+      const { freqs, mags } = computeFftMagExact(windowed, sr);
+      const minSepBins = 3; // matches scipy's find_peaks(mm, distance=3) directly, same bin grid as Python now
+
+      let topPeaksPct;
+      try { topPeaksPct = computeTopPeaksPct(freqs, mags, opts.topNBasis, opts.minFreq, opts.maxFreq, minSepBins); }
+      catch(e){ continue; }
+
+      eventResults.push({ eventNum: i+1, peaks: topPeaksPct.slice(0, 10) });
+      if (i % 3 === 2) await sleep0();
+    }
+
+    if (!eventResults.length) throw new Error('no events successfully processed');
+
+    const freqSummary = computeCommonFrequencies(eventResults, opts.tolerance, 5);
+    return { label: entry.name, freqSummary, eventCount: eventResults.length, detectedEvents: peakIndices.length };
+  }
+
+  // Compute windowed FFT centred at `time` (seconds) on an AudioBuffer.
   // `M` is the real analysis window (determines true frequency resolution).
   // `N` is the zero-padded FFT size (denser frequency grid, for a smooth curve
   // — this does not add real resolution, it just interpolates between the
@@ -653,8 +1254,8 @@
     const sr = audioBuffer.sampleRate;
     const ch0 = audioBuffer.getChannelData(0);
     const nCh = audioBuffer.numberOfChannels;
-    const center = Math.round(time * sr);
-    let start = center - Math.floor(M/2);
+    const centre = Math.round(time * sr);
+    let start = centre - Math.floor(M/2);
     const re = new Float64Array(N);
     const im = new Float64Array(N);
 
@@ -844,7 +1445,7 @@
   function addCompareTrace(entry, time){
     if (!entry.audioBuffer) return;
     const capture = computeSpectrumAt(entry.audioBuffer, time, 4096, 65536);
-    const color = TRACE_COLORS[compareIdSeq % TRACE_COLORS.length];
+    const color = TRACE_COLOURS[compareIdSeq % TRACE_COLOURS.length];
     compareIdSeq++;
     compareTraces.push({ id: 'ct' + compareIdSeq, color, entryName: entry.name, time, capture, manualOffset: 0 });
     renderCompareLegend();
@@ -938,11 +1539,11 @@
     const dbMin = -90, dbMax = 0;
 
     ctx.fillStyle = '#6b6b64';
-    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.font = '13px "JetBrains Mono", monospace';
     for (let i = 0; i <= 6; i++){
       const dbAtLine = dbMax - (i/6)*(dbMax - dbMin);
       const y = (h/6)*i;
-      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(13, y - 3));
     }
 
     ctx.beginPath();
@@ -970,10 +1571,10 @@
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = '#2f6fb0';
-      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.font = '15px "JetBrains Mono", monospace';
       const lx = Math.min(w-150, x+8);
       ctx.fillText(fmtHz(top.freq), lx, 18);
-      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.font = '13px "JetBrains Mono", monospace';
       ctx.fillText(`${top.db.toFixed(1)} dBFS`, lx, 33);
     }
   }
@@ -995,11 +1596,11 @@
     // dBFS axis on the left (comparison uses raw levels, not peak-normalised,
     // so absolute loudness differences between files stay visible)
     ctx.fillStyle = '#6b6b64';
-    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.font = '13px "JetBrains Mono", monospace';
     for (let i = 0; i <= 6; i++){
       const dbAtLine = dbMax - (i/6)*(dbMax - dbMin);
       const y = (h/6)*i;
-      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+      ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(13, y - 3));
     }
 
     compareTraces.forEach(t => {
@@ -1121,6 +1722,352 @@
   });
   dropzoneCompare.addEventListener('drop', (e) => {
     if (e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+
+  // ---------------- Tap Analyser page ----------------
+  const TAP_COLOURS = ['#0f8a4c','#b5690a','#2f6fb0','#a02b9e','#c23b2e','#0a8a8a','#8a7a00','#555550'];
+
+  function addTapFiles(fileArr){
+    [...fileArr].forEach(file => {
+      if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target.result;
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
+          const entry = { id: uid(), name: file.name, size: file.size, audioBuffer, skipStart:'', skipEnd:'' };
+          tapLibrary.push(entry);
+          renderTapRows();
+          tmpCtx.close();
+        }catch(err){
+          console.error('Could not decode', file.name, err);
+          alert(`Couldn't decode "${file.name}" as a WAV file.`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function drawTapRowWave(canvas, entry){
+    drawWaveformOverview(canvas, entry.audioBuffer);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const dur = entry.audioBuffer.duration || 1;
+    const ss = parseFloat(entry.skipStart);
+    const se = parseFloat(entry.skipEnd);
+    ctx.fillStyle = 'rgba(194,59,46,0.16)';
+    if (isFinite(ss) && ss > 0) ctx.fillRect(0, 0, Math.min(w, (ss/dur)*w), h);
+    if (isFinite(se) && se < dur) ctx.fillRect(Math.max(0,(se/dur)*w), 0, w - Math.max(0,(se/dur)*w), h);
+  }
+
+  function renderTapRows(){
+    tapFileCount.textContent = `${tapLibrary.length} loaded`;
+    if (!tapLibrary.length){
+      tapRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+      return;
+    }
+    tapRows.innerHTML = '';
+    tapLibrary.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'tap-row';
+
+      const head = document.createElement('div');
+      head.className = 'tr-head';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'tr-name';
+      nameEl.textContent = entry.name;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tr-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove this file';
+      removeBtn.addEventListener('click', () => {
+        tapLibrary = tapLibrary.filter(f => f.id !== entry.id);
+        renderTapRows();
+      });
+      head.appendChild(nameEl);
+      head.appendChild(removeBtn);
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'tr-wave';
+      canvas.width = 1200; canvas.height = 70;
+
+      const fields = document.createElement('div');
+      fields.className = 'tr-fields';
+
+      const ssField = document.createElement('div');
+      ssField.className = 'tap-field';
+      ssField.innerHTML = '<label>Skip Start (s)</label>';
+      const ssInput = document.createElement('input');
+      ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'auto';
+      ssInput.value = entry.skipStart;
+      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawTapRowWave(canvas, entry); });
+      ssField.appendChild(ssInput);
+
+      const seField = document.createElement('div');
+      seField.className = 'tap-field';
+      seField.innerHTML = '<label>Skip End (s)</label>';
+      const seInput = document.createElement('input');
+      seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
+      seInput.value = entry.skipEnd;
+      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawTapRowWave(canvas, entry); });
+      seField.appendChild(seInput);
+
+      fields.appendChild(ssField);
+      fields.appendChild(seField);
+
+      row.appendChild(head);
+      row.appendChild(canvas);
+      row.appendChild(fields);
+      tapRows.appendChild(row);
+
+      drawTapRowWave(canvas, entry);
+    });
+  }
+
+  fileInputTap.addEventListener('change', (e) => addTapFiles(e.target.files));
+  ;['dragover','dragenter'].forEach(evtName => {
+    dropzoneTap.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneTap.classList.add('drag'); });
+  });
+  ;['dragleave','drop'].forEach(evtName => {
+    dropzoneTap.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneTap.classList.remove('drag'); });
+  });
+  dropzoneTap.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addTapFiles(e.dataTransfer.files);
+  });
+
+  async function runTapAnalysis(){
+    if (tapRunning) return;
+    if (!tapLibrary.length){
+      tapStatus.textContent = 'Load at least one .wav file first.';
+      tapStatus.classList.add('err');
+      return;
+    }
+    tapRunning = true;
+    runTapBtn.disabled = true;
+    tapStatus.classList.remove('err');
+
+    const opts = {
+      numEvents:  parseInt(el('advNumEvents').value, 10) || 10,
+      minGap:     parseFloat(el('advMinGap').value) || 0.3,
+      minFreq:    parseFloat(el('advMinFreq').value) || 50,
+      maxFreq:    parseFloat(el('advMaxFreq').value) || 1000,
+      topNBasis:  parseInt(el('advTopNBasis').value, 10) || 10,
+      tolerance:  parseFloat(el('advTolerance').value) || 2,
+    };
+
+    const fileSummaries = [];
+    const errors = [];
+    for (let i = 0; i < tapLibrary.length; i++){
+      const entry = tapLibrary[i];
+      tapStatus.textContent = `Analysing ${i+1}/${tapLibrary.length}: ${entry.name}…`;
+      await sleep0();
+      try{
+        fileSummaries.push(await analyseTapFile(entry, opts));
+      }catch(err){
+        console.error(err);
+        errors.push(`${entry.name} (${err.message})`);
+      }
+    }
+
+    tapRunning = false;
+    runTapBtn.disabled = false;
+
+    if (!fileSummaries.length){
+      tapStatus.textContent = errors.length ? `Failed: ${errors.join(' · ')}` : 'No files processed successfully.';
+      tapStatus.classList.add('err');
+      return;
+    }
+
+    tapStatus.textContent = errors.length
+      ? `Done, with ${errors.length} skipped: ${errors.join(' · ')}`
+      : `Done — analysed ${fileSummaries.length} file(s).`;
+    if (errors.length) tapStatus.classList.add('err');
+
+    renderScatter(fileSummaries);
+    renderVarianceTables(fileSummaries);
+  }
+
+  runTapBtn.addEventListener('click', runTapAnalysis);
+
+  function renderScatter(fileSummaries){
+    const ctx = scatterCanvas.getContext('2d');
+    const w = scatterCanvas.width, h = scatterCanvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#fbfbf9';
+    ctx.fillRect(0,0,w,h);
+
+    const allFreqs = [], allPcts = [];
+    fileSummaries.forEach(fs => fs.freqSummary.forEach(e => { allFreqs.push(e.freq); allPcts.push(e.avgPct); }));
+
+    if (!allFreqs.length){
+      ctx.fillStyle = '#83837c';
+      ctx.font = '15px "JetBrains Mono", monospace';
+      ctx.fillText('No frequency data to plot.', 20, h/2);
+      scatterLegend.innerHTML = '';
+      return;
+    }
+
+    const fMin = Math.min(...allFreqs), fMax = Math.max(...allFreqs);
+    const pMin = 0, pMax = Math.max(...allPcts);
+    const freqRange = Math.max(fMax - fMin, 1);
+    const pctRange = Math.max(pMax - pMin, 1);
+    const xPad = Math.max(freqRange*0.18, 20);
+    const yPad = Math.max(pMax*0.18, 2);
+    const xLo = fMin - xPad, xHi = fMax + xPad;
+    const yLo = 0, yHi = pMax + yPad;
+
+    const marginL = 54, marginB = 26, marginT = 12, marginR = 14;
+    const plotW = w - marginL - marginR, plotH = h - marginT - marginB;
+    const toX = f => marginL + ((f-xLo)/(xHi-xLo))*plotW;
+    const toY = p => marginT + plotH - ((p-yLo)/(yHi-yLo))*plotH;
+
+    // grid + axes
+    ctx.strokeStyle = '#e2e2dc';
+    ctx.lineWidth = 1;
+    ctx.fillStyle = '#6b6b64';
+    ctx.font = '13px "JetBrains Mono", monospace';
+    for (let i = 0; i <= 5; i++){
+      const p = yLo + (i/5)*(yHi-yLo);
+      const y = toY(p);
+      ctx.beginPath(); ctx.moveTo(marginL, y); ctx.lineTo(w-marginR, y); ctx.stroke();
+      ctx.fillText(p.toFixed(1)+'%', 4, y+3);
+    }
+    const nXTicks = 6;
+    for (let i = 0; i <= nXTicks; i++){
+      const f = xLo + (i/nXTicks)*(xHi-xLo);
+      const x = toX(f);
+      ctx.beginPath(); ctx.moveTo(x, marginT); ctx.lineTo(x, h-marginB); ctx.stroke();
+      const label = f.toFixed(0)+' Hz';
+      ctx.fillText(label, Math.min(w-marginR-ctx.measureText(label).width, Math.max(marginL, x-16)), h-8);
+    }
+
+    const xArm = Math.max(freqRange*0.012, 2.5);
+    const yArm = Math.max(pctRange*0.02, pMax*0.02, 0.4);
+
+    // Draw all the × markers first, and remember where each one's label wants
+    // to sit by default (directly above it).
+    const points = [];
+    fileSummaries.forEach((fs, fi) => {
+      const color = TAP_COLOURS[fi % TAP_COLOURS.length];
+      fs.freqSummary.forEach(entry => {
+        const cx = toX(entry.freq), cy = toY(entry.avgPct);
+        const dxArm = (toX(entry.freq+xArm)-toX(entry.freq));
+        const dyArm = (toY(entry.avgPct)-toY(entry.avgPct+yArm));
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx-dxArm, cy-dyArm); ctx.lineTo(cx+dxArm, cy+dyArm); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx-dxArm, cy+dyArm); ctx.lineTo(cx+dxArm, cy-dyArm); ctx.stroke();
+        points.push({ cx, cy, dyArm, color, entry });
+      });
+    });
+
+    // Give each label a starting box directly above its marker (below, if
+    // above would run off the top of the plot), then nudge overlapping boxes
+    // gently apart in small steps — rather than jumping straight to some
+    // far-away slot — until nothing overlaps.
+    ctx.font = 'bold 14px "JetBrains Mono", monospace';
+    const lineH = 16;
+    const gap = 7;
+
+    points.forEach(pt => {
+      const freqLabel = `${pt.entry.freq.toFixed(1)} Hz`;
+      const pctLabel = `${pt.entry.avgPct.toFixed(1)}%`;
+      const lw = Math.max(ctx.measureText(freqLabel).width, ctx.measureText(pctLabel).width);
+      const boxW = lw + 6, boxH = lineH*2 + 2;
+      let y1 = pt.cy - pt.dyArm - gap, y0 = y1 - boxH;
+      if (y0 < marginT){ y0 = pt.cy + pt.dyArm + gap; y1 = y0 + boxH; }
+      let x0 = pt.cx - boxW/2, x1 = pt.cx + boxW/2;
+      if (x0 < marginL){ x1 += marginL-x0; x0 = marginL; }
+      if (x1 > w-marginR){ x0 -= x1-(w-marginR); x1 = w-marginR; }
+      pt.box = { x0, y0, x1, y1, freqLabel, pctLabel, lw };
+    });
+
+    for (let iter = 0; iter < 120; iter++){
+      let moved = false;
+      for (let i = 0; i < points.length; i++){
+        for (let j = i+1; j < points.length; j++){
+          const a = points[i].box, b = points[j].box;
+          const overlapX = Math.min(a.x1,b.x1) - Math.max(a.x0,b.x0);
+          const overlapY = Math.min(a.y1,b.y1) - Math.max(a.y0,b.y0);
+          if (overlapX <= 0 || overlapY <= 0) continue;
+          moved = true;
+          const step = 1.5; // small nudge per pass, so labels drift apart rather than jump
+          if (overlapY <= overlapX){
+            const dir = (a.y0+a.y1) <= (b.y0+b.y1) ? -1 : 1;
+            a.y0 += dir*step; a.y1 += dir*step;
+            b.y0 -= dir*step; b.y1 -= dir*step;
+          } else {
+            const dir = (a.x0+a.x1) <= (b.x0+b.x1) ? -1 : 1;
+            a.x0 += dir*step; a.x1 += dir*step;
+            b.x0 -= dir*step; b.x1 -= dir*step;
+          }
+        }
+      }
+      points.forEach(pt => {
+        const b = pt.box;
+        if (b.x0 < marginL){ const d = marginL-b.x0; b.x0+=d; b.x1+=d; }
+        if (b.x1 > w-marginR){ const d = b.x1-(w-marginR); b.x0-=d; b.x1-=d; }
+        if (b.y0 < marginT){ const d = marginT-b.y0; b.y0+=d; b.y1+=d; }
+        if (b.y1 > h-marginB){ const d = b.y1-(h-marginB); b.y0-=d; b.y1-=d; }
+      });
+      if (!moved) break;
+    }
+
+    points.forEach(pt => {
+      const b = pt.box;
+      const bcx = (b.x0+b.x1)/2, bcy = (b.y0+b.y1)/2;
+      // faint leader line back to the marker, only drawn once the label has
+      // actually drifted a noticeable distance from its natural position
+      if (Math.hypot(bcx-pt.cx, bcy-pt.cy) > 26){
+        ctx.strokeStyle = pt.color;
+        ctx.globalAlpha = 0.35;
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(pt.cx, pt.cy); ctx.lineTo(bcx, bcy); ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.fillStyle = pt.color;
+      const lx = Math.min(w-marginR-b.lw, Math.max(marginL, bcx - b.lw/2));
+      const firstLineY = b.y0 + lineH - 3;
+      ctx.fillText(b.freqLabel, lx, firstLineY);
+      ctx.fillText(b.pctLabel, lx, firstLineY + lineH);
+    });
+
+    scatterLegend.innerHTML = fileSummaries.map((fs, fi) => `
+      <div class="sl-item">
+        <span class="sl-swatch" style="background:${TAP_COLOURS[fi % TAP_COLOURS.length]};"></span>
+        ${fs.label} (${fs.eventCount}/${fs.detectedEvents} events)
+      </div>`).join('');
+  }
+
+  function renderVarianceTables(fileSummaries){
+    tapResultsBody.innerHTML = fileSummaries.map((fs, fi) => {
+      const color = TAP_COLOURS[fi % TAP_COLOURS.length];
+      const rows = fs.freqSummary.map(e => `
+        <tr>
+          <td class="freq">${e.freq.toFixed(1)} Hz</td>
+          <td>${e.appearances}/${fs.eventCount}</td>
+          <td>${e.avgPct.toFixed(1)}%</td>
+          <td>±${e.stdPct.toFixed(2)}%</td>
+          <td>${e.minPct.toFixed(1)}–${e.maxPct.toFixed(1)}%</td>
+          <td>±${e.stdHz.toFixed(3)} Hz</td>
+        </tr>`).join('');
+      return `
+        <div class="variance-block">
+          <div class="vb-title"><span class="swatch" style="background:${color};"></span>${fs.label} — ${fs.eventCount} of ${fs.detectedEvents} events analysed</div>
+          <table class="variance">
+            <thead><tr><th>Freq</th><th>Appears</th><th>Avg %</th><th>Std % (energy variance)</th><th>Range %</th><th>Drift (freq variance)</th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="6" style="color:var(--text-faint);">No consistent peaks found.</td></tr>'}</tbody>
+          </table>
+        </div>`;
+    }).join('');
+  }
+
+  document.querySelectorAll('.home-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const btn = document.querySelector(`.tab-btn[data-page="${card.dataset.goto}"]`);
+      if (btn) btn.click();
+    });
   });
 
   // ---------------- Axis controls (scale + range) ----------------
@@ -1400,7 +2347,7 @@
 
     const mid = h/2;
 
-    // subtle horizontal center + quarter lines for amplitude reference
+    // subtle horizontal centre + quarter lines for amplitude reference
     ctx.strokeStyle = '#e2e2dc';
     ctx.lineWidth = 1;
     [0.25, 0.5, 0.75].forEach(f => {
@@ -1428,7 +2375,7 @@
 
     if (durationSec){
       ctx.fillStyle = '#8a8a83';
-      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.font = '13px "JetBrains Mono", monospace';
       const nTicks = 6;
       for (let i = 0; i <= nTicks; i++){
         const frac = i/nTicks;
@@ -1505,7 +2452,7 @@
     return ticks;
   }
 
-  // Averages `values` across a fractional-octave window centered on bin `idx`
+  // Averages `values` across a fractional-octave window centred on bin `idx`
   // (bins are assumed linearly spaced at `binHz` apart).
   function octaveAverage(values, binHz, idx, fraction){
     const f = idx * binHz;
@@ -1535,7 +2482,7 @@
       const x = freqToX(f, w);
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
       ctx.fillStyle = '#6b6b64';
-      ctx.font = '12px "JetBrains Mono", monospace';
+      ctx.font = '14px "JetBrains Mono", monospace';
       const label = (f >= 1000 ? (f/1000).toFixed(f % 1000 === 0 ? 0 : 1) + 'k' : f) + ' Hz';
       const lx = Math.min(w - ctx.measureText(label).width - 4, Math.max(4, x + 5));
       ctx.fillText(label, lx, h - 8);
@@ -1592,12 +2539,12 @@
     // Left-side axis: relative dB (peak = 100 dB), derived from the same
     // dBFS gridlines drawGrid() already lays down horizontally.
     ctx.fillStyle = '#6b6b64';
-    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.font = '13px "JetBrains Mono", monospace';
     for (let i = 0; i <= 6; i++){
       const dbfsAtLine = dbMax - (i/6)*(dbMax - dbMin);
       const relAtLine = dbfsAtLine + normOffset;
       const y = (h/6)*i;
-      ctx.fillText(relAtLine.toFixed(0) + ' dB', 6, Math.max(11, y - 3));
+      ctx.fillText(relAtLine.toFixed(0) + ' dB', 6, Math.max(13, y - 3));
     }
 
     ctx.beginPath();
@@ -1626,10 +2573,10 @@
       ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = '#b5690a';
-      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.font = '15px "JetBrains Mono", monospace';
       const lx = Math.min(w-150, x+8);
       ctx.fillText(fmtHz(top.freq), lx, 18);
-      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.font = '13px "JetBrains Mono", monospace';
       ctx.fillText(`${(top.db+normOffset).toFixed(1)} dB rel  /  ${top.db.toFixed(1)} dBFS`, lx, 33);
     }
 
@@ -1652,9 +2599,9 @@
       const relDb = dbfs + normOffset;
       const labelY = h - 50;
       const clx = Math.min(w-155, Math.max(4, cx+8));
-      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.font = '15px "JetBrains Mono", monospace';
       ctx.fillText(fmtHz(cursorFreq), clx, labelY);
-      ctx.font = '11px "JetBrains Mono", monospace';
+      ctx.font = '13px "JetBrains Mono", monospace';
       ctx.fillText(`${relDb.toFixed(1)} dB rel  /  ${dbfs.toFixed(1)} dBFS`, clx, labelY+15);
     }
   }
@@ -1782,6 +2729,7 @@
   drawCompareGraph();
   resetPreview();
   updateFreqRangeLabels();
+  renderTapRows();
 })();
 </script>
 </body>
