@@ -258,6 +258,11 @@
     cursor:pointer;
   }
 
+  /* ---------- Sample control (Analyse page) ---------- */
+  .sample-bar{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .sample-bar input.freq-min-input{width:76px;}
+  .sample-unit{font-size:12px;color:var(--text-faint);}
+
   .tabs{display:flex;gap:6px;margin-bottom:20px;border-bottom:1px solid var(--line);}
   .tab-btn{
     background:transparent;border:none;color:var(--text-dim);
@@ -283,8 +288,21 @@
   .compare-row .cr-controls{display:flex;align-items:center;gap:10px;}
   .compare-row .cr-time{font-size:12px;color:var(--text-dim);min-width:58px;}
   .compare-row .cr-slider{flex:1;}
+  .compare-row .cr-actions{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;}
+  .compare-row .cr-sample{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .compare-row .cr-sample input{
+    width:62px;font-family:inherit;font-size:12px;padding:7px 8px;
+    border:1px solid var(--line);border-radius:var(--radius);background:#ffffff;color:var(--text);
+  }
+  .compare-row .cr-sample-btn{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:11px;letter-spacing:0.04em;text-transform:uppercase;
+    padding:8px 12px;border-radius:var(--radius);cursor:pointer;white-space:nowrap;
+    transition:border-color .15s,color .15s;
+  }
+  .compare-row .cr-sample-btn:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
   .compare-row .cr-add{
-    margin-top:10px;width:100%;
+    margin-top:0;flex:1;
     background:var(--panel-raised);border:1px solid var(--line);color:var(--text);
     font-family:inherit;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;
     padding:8px;border-radius:var(--radius);cursor:pointer;
@@ -489,6 +507,14 @@
         <div class="wave-canvas-wrap">
           <canvas id="waveCanvas" width="1200" height="88"></canvas>
         </div>
+
+        <div class="sample-bar">
+          <span class="axis-label">Sample offset</span>
+          <input type="number" id="sampleOffset" class="freq-min-input" value="0.01" min="0" step="0.001">
+          <span class="sample-unit">sec after peak</span>
+          <button class="text-btn" id="sampleBtn" disabled>Sample</button>
+        </div>
+        <div class="empty-note" style="padding:6px 2px 0;text-align:left;">Drag the bar above to just before a tap, then press Sample — it jumps to that tap's loudest point plus the offset.</div>
       </div>
 
       <div class="panel">
@@ -729,6 +755,8 @@
   const durTimeEl = el('durTime');
   const scrub = el('scrub');
   const waveCanvas = el('waveCanvas');
+  const sampleOffsetInput = el('sampleOffset');
+  const sampleBtn = el('sampleBtn');
   const fftCanvas = el('fftCanvas');
   const screenBadge = el('screenBadge');
   const screenStamp = el('screenStamp');
@@ -837,6 +865,28 @@
   }
 
   function nextPow2(n){ let p = 1; while (p < n) p <<= 1; return p; }
+
+  // Search forward from `startTimeSec` for the sample of greatest absolute
+  // amplitude within the next `windowSec` seconds — the "loudest peak" for
+  // the Sample control. Used to jump from a rough manual marker (dropped
+  // somewhere before a tap) to that tap's actual attack.
+  function findLoudestPeakForward(audioBuffer, startTimeSec, windowSec){
+    const sr = audioBuffer.sampleRate;
+    const nCh = audioBuffer.numberOfChannels;
+    const chans = [];
+    for (let c = 0; c < nCh; c++) chans.push(audioBuffer.getChannelData(c));
+    const total = audioBuffer.length;
+    const startIdx = Math.min(total-1, Math.max(0, Math.round(startTimeSec*sr)));
+    const endIdx = Math.min(total, startIdx + Math.max(1, Math.round(windowSec*sr)));
+    let bestI = startIdx, bestV = -Infinity;
+    for (let i = startIdx; i < endIdx; i++){
+      let sum = 0;
+      for (let c = 0; c < nCh; c++) sum += chans[c][i];
+      const v = Math.abs(sum/nCh);
+      if (v > bestV){ bestV = v; bestI = i; }
+    }
+    return bestI / sr;
+  }
 
   // ---------------- Tap Analyser DSP (client-side port of multi_variance.py / tap_scatter.py) ----------------
   function sleep0(){ return new Promise(r => setTimeout(r, 0)); }
@@ -1220,7 +1270,7 @@
     const eventResults = [];
     for (let i = 0; i < peakIndices.length; i++){
       let windowData;
-      try { windowData = extractEventWindow(samples, sr, peakIndices[i], 0.01, 1.0); }
+      try { windowData = extractEventWindow(samples, sr, peakIndices[i], 0.1, 1.0); }
       catch(e){ continue; }
       if (windowData.length < 16) continue;
 
@@ -1425,6 +1475,31 @@
       controls.appendChild(slider);
       controls.appendChild(timeEl);
 
+      const actions = document.createElement('div');
+      actions.className = 'cr-actions';
+
+      const sampleWrap = document.createElement('div');
+      sampleWrap.className = 'cr-sample';
+      const offsetInput = document.createElement('input');
+      offsetInput.type = 'number';
+      offsetInput.min = '0'; offsetInput.step = '0.001';
+      offsetInput.value = entry.crSampleOffset !== undefined ? entry.crSampleOffset : '0.01';
+      offsetInput.title = 'Offset (seconds) after the loudest peak';
+      const sampleBtnRow = document.createElement('button');
+      sampleBtnRow.className = 'cr-sample-btn';
+      sampleBtnRow.textContent = 'Sample';
+      sampleBtnRow.title = "Drag the marker to just before a tap, then Sample jumps to its loudest point plus the offset";
+      sampleBtnRow.addEventListener('click', () => {
+        if (!entry.audioBuffer) return;
+        entry.crSampleOffset = parseFloat(offsetInput.value) || 0;
+        const offsetT = Math.max(0, entry.crSampleOffset);
+        const peakTime = findLoudestPeakForward(entry.audioBuffer, entry.compareFrac * dur, 0.5);
+        const sampleTime = Math.min(dur, peakTime + offsetT);
+        setMoment(dur ? sampleTime/dur : 0);
+      });
+      sampleWrap.appendChild(offsetInput);
+      sampleWrap.appendChild(sampleBtnRow);
+
       const addBtn = document.createElement('button');
       addBtn.className = 'cr-add';
       addBtn.textContent = 'Add Snapshot';
@@ -1432,10 +1507,13 @@
         addCompareTrace(entry, entry.compareFrac * dur);
       });
 
+      actions.appendChild(sampleWrap);
+      actions.appendChild(addBtn);
+
       row.appendChild(nameEl);
       row.appendChild(waveWrap);
       row.appendChild(controls);
-      row.appendChild(addBtn);
+      row.appendChild(actions);
       compareRows.appendChild(row);
 
       if (entry.audioBuffer) drawWaveformOverview(waveCanvasRow, entry.audioBuffer, entry.compareFrac, dur);
@@ -1536,7 +1614,9 @@
     ctx.clearRect(0,0,w,h);
     drawGrid(ctx, w, h);
 
-    const dbMin = -90, dbMax = 0;
+    const curveVals = new Array(w);
+    for (let x = 0; x < w; x++) curveVals[x] = getSmoothedDbAtFreq(capture, xToFreq(x, w));
+    const { dbMin, dbMax } = autoDbRange(curveVals);
 
     ctx.fillStyle = '#6b6b64';
     ctx.font = '13px "JetBrains Mono", monospace';
@@ -1552,9 +1632,7 @@
     ctx.shadowColor = 'rgba(47,111,176,0.3)';
     ctx.shadowBlur = 5;
     for (let x = 0; x < w; x++){
-      const freq = xToFreq(x, w);
-      const dbfs = getSmoothedDbAtFreq(capture, freq);
-      const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+      const db = Math.max(dbMin, Math.min(dbMax, curveVals[x]));
       const norm = (db - dbMin)/(dbMax - dbMin);
       const y = h - norm*h;
       if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -1592,9 +1670,17 @@
     ctx.clearRect(0,0,w,h);
     drawGrid(ctx, w, h);
 
-    const dbMin = -90, dbMax = 0;
     // dBFS axis on the left (comparison uses raw levels, not peak-normalised,
     // so absolute loudness differences between files stay visible)
+    const traceCurves = compareTraces.map(t => {
+      const vals = new Array(w);
+      for (let x = 0; x < w; x++) vals[x] = getSmoothedDbAtFreq(t.capture, xToFreq(x, w)) + t.manualOffset;
+      return vals;
+    });
+    const allVals = traceCurves.length ? [].concat(...traceCurves) : [];
+    const { dbMin, dbMax } = autoDbRange(allVals);
+    compareDbMin = dbMin; compareDbMax = dbMax;
+
     ctx.fillStyle = '#6b6b64';
     ctx.font = '13px "JetBrains Mono", monospace';
     for (let i = 0; i <= 6; i++){
@@ -1603,14 +1689,12 @@
       ctx.fillText(dbAtLine.toFixed(0) + ' dB', 6, Math.max(13, y - 3));
     }
 
-    compareTraces.forEach(t => {
+    compareTraces.forEach((t, ti) => {
       ctx.beginPath();
       ctx.strokeStyle = t.color;
       ctx.lineWidth = (t.id === draggingTraceId) ? 3 : 2;
       for (let x = 0; x < w; x++){
-        const freq = xToFreq(x, w);
-        const dbfs = getSmoothedDbAtFreq(t.capture, freq) + t.manualOffset;
-        const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+        const db = Math.max(dbMin, Math.min(dbMax, traceCurves[ti][x]));
         const norm = (db - dbMin)/(dbMax - dbMin);
         const y = h - norm*h;
         if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
@@ -1631,10 +1715,9 @@
 
   // Canvas-pixel y-position of a trace's (offset-adjusted) curve at a given frequency
   function traceYAtFreq(trace, freq, w, h){
-    const dbMin = -90, dbMax = 0;
     const db = getSmoothedDbAtFreq(trace.capture, freq) + trace.manualOffset;
-    const clamped = Math.max(dbMin, Math.min(dbMax, db));
-    const norm = (clamped - dbMin)/(dbMax - dbMin);
+    const clamped = Math.max(compareDbMin, Math.min(compareDbMax, db));
+    const norm = (clamped - compareDbMin)/(compareDbMax - compareDbMin);
     return h - norm*h;
   }
 
@@ -1694,7 +1777,7 @@
       const rect = compareCanvas.getBoundingClientRect();
       const scale = compareCanvas.height / rect.height;
       const deltaCanvasY = (evt.clientY - dragStartClientY) * scale;
-      const deltaDb = -deltaCanvasY / compareCanvas.height * 90; // dbMax(0) - dbMin(-90)
+      const deltaDb = -deltaCanvasY / compareCanvas.height * (compareDbMax - compareDbMin);
       t.manualOffset = dragStartOffset + deltaDb;
       drawCompareGraph();
       return;
@@ -2186,6 +2269,7 @@
       scrub.disabled = false;
       playBtn.disabled = false;
       stopBtn.disabled = false;
+      sampleBtn.disabled = false;
       drawWaveformOverview(waveCanvas, entry.audioBuffer);
     });
     audioEl.addEventListener('timeupdate', () => {
@@ -2248,6 +2332,26 @@
     captureSpectrum(entry, stopTime);
     audioEl.currentTime = 0;
     resetTransportUI();
+  });
+
+  sampleBtn.addEventListener('click', () => {
+    const entry = library.find(f => f.id === activeId);
+    if (!entry || !audioEl) return;
+    if (isPlaying){
+      audioEl.pause();
+      isPlaying = false;
+      playBtn.innerHTML = '&#9658;';
+      cancelAnimationFrame(rafId);
+    }
+    const dur = entry.audioBuffer.duration || 1;
+    const offsetT = Math.max(0, parseFloat(sampleOffsetInput.value) || 0);
+    const peakTime = findLoudestPeakForward(entry.audioBuffer, audioEl.currentTime, 0.5);
+    const sampleTime = Math.min(dur, peakTime + offsetT);
+    audioEl.currentTime = sampleTime;
+    curTimeEl.textContent = fmtTime(sampleTime);
+    scrub.value = Math.round((sampleTime/dur)*1000);
+    drawWaveformOverview(waveCanvas, entry.audioBuffer, sampleTime/dur);
+    captureSpectrum(entry, sampleTime);
   });
 
   function scheduleCaptureAt(entry, t){
@@ -2404,6 +2508,29 @@
   let freqScaleMode = 'linear'; // 'linear' | 'log'
   let OCTAVE_FRACTION = 1/24; // fractional-octave smoothing; 0 = off (raw)
 
+  // Auto-fit dB range: rather than a fixed -90..0 axis (which leaves most
+  // real recordings — quieter than 0 dBFS — squashed near the bottom), each
+  // graph picks a [dbMin, dbMax] that hugs its own curve with a little
+  // padding, so the shape actually fills the chart.
+  function autoDbRange(values){
+    let lo = Infinity, hi = -Infinity;
+    for (const v of values){
+      if (!isFinite(v)) continue;
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+    if (!isFinite(lo) || !isFinite(hi)) return { dbMin: -90, dbMax: 0 };
+    let dbMax = Math.min(6, Math.ceil((hi + 6) / 10) * 10);
+    let dbMin = Math.max(-120, Math.floor((lo - 6) / 10) * 10);
+    if (dbMax - dbMin < 20) dbMin = dbMax - 20; // guard against a near-flat curve
+    return { dbMin, dbMax };
+  }
+
+  // Shared with traceYAtFreq (used when hit-testing/dragging a trace on the
+  // Compare graph) so curve-picking stays in sync with whatever range
+  // drawCompareGraph most recently auto-fit to.
+  let compareDbMin = -90, compareDbMax = 0;
+
   // Canvas x-position (0..w) for a given frequency, honouring the current scale mode.
   function freqToX(freq, w){
     const f = Math.max(FREQ_MIN, Math.min(FREQ_MAX, freq));
@@ -2534,7 +2661,9 @@
     drawGrid(ctx, w, h);
 
     const { normOffset } = capture;
-    const dbMin = -90, dbMax = 0;
+    const curveVals = new Array(w);
+    for (let x = 0; x < w; x++) curveVals[x] = getSmoothedDbAtFreq(capture, xToFreq(x, w));
+    const { dbMin, dbMax } = autoDbRange(curveVals);
 
     // Left-side axis: relative dB (peak = 100 dB), derived from the same
     // dBFS gridlines drawGrid() already lays down horizontally.
@@ -2553,9 +2682,7 @@
     ctx.shadowColor = 'rgba(181,105,10,0.3)';
     ctx.shadowBlur = 5;
     for (let x = 0; x < w; x++){
-      const freq = xToFreq(x, w);
-      const dbfs = getSmoothedDbAtFreq(capture, freq);
-      const db = Math.max(dbMin, Math.min(dbMax, dbfs));
+      const db = Math.max(dbMin, Math.min(dbMax, curveVals[x]));
       const norm = (db - dbMin)/(dbMax - dbMin);
       const y = h - norm*h;
       if (x === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
