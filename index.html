@@ -701,7 +701,25 @@
     <!-- RIGHT: RESULTS -->
     <div>
       <div class="panel">
-        <div class="panel-label"><span>Frequency Scatter <span class="freq-range-label" style="color:var(--text-faint);">(top 5 most common frequencies per file, average % vs. Hz)</span></span></div>
+        <div class="panel-label"><span>Frequency Scatter <span class="freq-range-label" id="tapFreqRangeLabel" style="color:var(--text-faint);">(top 5 most common frequencies per file, average % vs. Hz)</span></span></div>
+        <div class="axis-bar" style="margin-top:0;">
+          <div class="axis-group">
+            <span class="axis-label">Show top</span>
+            <select id="tapTopNSelect" class="smoothing-select">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5" selected>5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+            <span class="sample-unit">most common frequencies</span>
+          </div>
+        </div>
         <div class="screen">
           <canvas id="scatterCanvas" width="1200" height="440"></canvas>
         </div>
@@ -711,7 +729,7 @@
       <div class="panel" id="tapResultsPanel">
         <div class="panel-label"><span>Per-File Variance Summary</span></div>
         <div id="tapResultsBody">
-          <div class="placeholder">Load .wav files on the left and press Run Analysis — each file's top 5 most consistent tap/pluck frequencies will be listed here, with a combined scatter graph above.</div>
+          <div class="placeholder">Load .wav files on the left and press Run Analysis — each file's most consistent tap/pluck frequencies (however many you chose above) will be listed here, with a combined scatter graph above.</div>
         </div>
       </div>
     </div>
@@ -803,8 +821,11 @@
   const scatterCanvas = el('scatterCanvas');
   const scatterLegend = el('scatterLegend');
   const tapResultsBody = el('tapResultsBody');
+  const tapTopNSelect = el('tapTopNSelect');
+  const tapFreqRangeLabel = el('tapFreqRangeLabel');
   let tapLibrary = [];      // {id, name, size, url, audioBuffer, skipStart:'', skipEnd:''}
   let tapRunning = false;
+  let lastTapFileSummaries = null; // cached results, so "Show top" can re-slice without re-running analysis
 
   // ---------------- Utils ----------------
   function fmtTime(t){
@@ -1306,7 +1327,10 @@
 
     if (!eventResults.length) throw new Error('no events successfully processed');
 
-    const freqSummary = computeCommonFrequencies(eventResults, opts.tolerance, 5);
+    // Compute the max we'd ever display (10) regardless of the user's current
+    // "Show top" selection, so changing that selector can just re-slice and
+    // redraw instantly without re-running the whole analysis.
+    const freqSummary = computeCommonFrequencies(eventResults, opts.tolerance, 10);
     return { label: entry.name, freqSummary, eventCount: eventResults.length, detectedEvents: peakIndices.length };
   }
 
@@ -1985,13 +2009,30 @@
       : `Done — analysed ${fileSummaries.length} file(s).`;
     if (errors.length) tapStatus.classList.add('err');
 
+    lastTapFileSummaries = fileSummaries;
     renderScatter(fileSummaries);
     renderVarianceTables(fileSummaries);
   }
 
   runTapBtn.addEventListener('click', runTapAnalysis);
 
+  function getTapTopN(){
+    const n = parseInt(tapTopNSelect.value, 10);
+    return Math.min(10, Math.max(1, n || 5));
+  }
+
+  tapTopNSelect.addEventListener('change', () => {
+    const n = getTapTopN();
+    tapFreqRangeLabel.textContent = `(top ${n} most common frequenc${n === 1 ? 'y' : 'ies'} per file, average % vs. Hz)`;
+    if (lastTapFileSummaries) {
+      renderScatter(lastTapFileSummaries);
+      renderVarianceTables(lastTapFileSummaries);
+    }
+  });
+
   function renderScatter(fileSummaries){
+    const topN = getTapTopN();
+    fileSummaries = fileSummaries.map(fs => ({ ...fs, freqSummary: fs.freqSummary.slice(0, topN) }));
     const ctx = scatterCanvas.getContext('2d');
     const w = scatterCanvas.width, h = scatterCanvas.height;
     ctx.clearRect(0,0,w,h);
@@ -2012,7 +2053,6 @@
     const fMin = Math.min(...allFreqs), fMax = Math.max(...allFreqs);
     const pMin = 0, pMax = Math.max(...allPcts);
     const freqRange = Math.max(fMax - fMin, 1);
-    const pctRange = Math.max(pMax - pMin, 1);
     const xPad = Math.max(freqRange*0.18, 20);
     const yPad = Math.max(pMax*0.18, 2);
     const xLo = fMin - xPad, xHi = fMax + xPad;
@@ -2043,95 +2083,21 @@
       ctx.fillText(label, Math.min(w-marginR-ctx.measureText(label).width, Math.max(marginL, x-16)), h-8);
     }
 
-    const xArm = Math.max(freqRange*0.012, 2.5);
-    const yArm = Math.max(pctRange*0.02, pMax*0.02, 0.4);
+    const dotR = 5.5;
 
-    // Draw all the × markers first, and remember where each one's label wants
-    // to sit by default (directly above it).
-    const points = [];
+    // Draw a filled, coloured dot marker for every frequency point.
     fileSummaries.forEach((fs, fi) => {
       const color = TAP_COLOURS[fi % TAP_COLOURS.length];
       fs.freqSummary.forEach(entry => {
         const cx = toX(entry.freq), cy = toY(entry.avgPct);
-        const dxArm = (toX(entry.freq+xArm)-toX(entry.freq));
-        const dyArm = (toY(entry.avgPct)-toY(entry.avgPct+yArm));
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(cx-dxArm, cy-dyArm); ctx.lineTo(cx+dxArm, cy+dyArm); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(cx-dxArm, cy+dyArm); ctx.lineTo(cx+dxArm, cy-dyArm); ctx.stroke();
-        points.push({ cx, cy, dyArm, color, entry });
+        ctx.beginPath();
+        ctx.arc(cx, cy, dotR, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = '#fbfbf9';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       });
-    });
-
-    // Give each label a starting box directly above its marker (below, if
-    // above would run off the top of the plot), then nudge overlapping boxes
-    // gently apart in small steps — rather than jumping straight to some
-    // far-away slot — until nothing overlaps.
-    ctx.font = 'bold 14px "JetBrains Mono", monospace';
-    const lineH = 16;
-    const gap = 7;
-
-    points.forEach(pt => {
-      const freqLabel = `${pt.entry.freq.toFixed(1)} Hz`;
-      const pctLabel = `${pt.entry.avgPct.toFixed(1)}%`;
-      const lw = Math.max(ctx.measureText(freqLabel).width, ctx.measureText(pctLabel).width);
-      const boxW = lw + 6, boxH = lineH*2 + 2;
-      let y1 = pt.cy - pt.dyArm - gap, y0 = y1 - boxH;
-      if (y0 < marginT){ y0 = pt.cy + pt.dyArm + gap; y1 = y0 + boxH; }
-      let x0 = pt.cx - boxW/2, x1 = pt.cx + boxW/2;
-      if (x0 < marginL){ x1 += marginL-x0; x0 = marginL; }
-      if (x1 > w-marginR){ x0 -= x1-(w-marginR); x1 = w-marginR; }
-      pt.box = { x0, y0, x1, y1, freqLabel, pctLabel, lw };
-    });
-
-    for (let iter = 0; iter < 120; iter++){
-      let moved = false;
-      for (let i = 0; i < points.length; i++){
-        for (let j = i+1; j < points.length; j++){
-          const a = points[i].box, b = points[j].box;
-          const overlapX = Math.min(a.x1,b.x1) - Math.max(a.x0,b.x0);
-          const overlapY = Math.min(a.y1,b.y1) - Math.max(a.y0,b.y0);
-          if (overlapX <= 0 || overlapY <= 0) continue;
-          moved = true;
-          const step = 1.5; // small nudge per pass, so labels drift apart rather than jump
-          if (overlapY <= overlapX){
-            const dir = (a.y0+a.y1) <= (b.y0+b.y1) ? -1 : 1;
-            a.y0 += dir*step; a.y1 += dir*step;
-            b.y0 -= dir*step; b.y1 -= dir*step;
-          } else {
-            const dir = (a.x0+a.x1) <= (b.x0+b.x1) ? -1 : 1;
-            a.x0 += dir*step; a.x1 += dir*step;
-            b.x0 -= dir*step; b.x1 -= dir*step;
-          }
-        }
-      }
-      points.forEach(pt => {
-        const b = pt.box;
-        if (b.x0 < marginL){ const d = marginL-b.x0; b.x0+=d; b.x1+=d; }
-        if (b.x1 > w-marginR){ const d = b.x1-(w-marginR); b.x0-=d; b.x1-=d; }
-        if (b.y0 < marginT){ const d = marginT-b.y0; b.y0+=d; b.y1+=d; }
-        if (b.y1 > h-marginB){ const d = b.y1-(h-marginB); b.y0-=d; b.y1-=d; }
-      });
-      if (!moved) break;
-    }
-
-    points.forEach(pt => {
-      const b = pt.box;
-      const bcx = (b.x0+b.x1)/2, bcy = (b.y0+b.y1)/2;
-      // faint leader line back to the marker, only drawn once the label has
-      // actually drifted a noticeable distance from its natural position
-      if (Math.hypot(bcx-pt.cx, bcy-pt.cy) > 26){
-        ctx.strokeStyle = pt.color;
-        ctx.globalAlpha = 0.35;
-        ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.moveTo(pt.cx, pt.cy); ctx.lineTo(bcx, bcy); ctx.stroke();
-        ctx.globalAlpha = 1;
-      }
-      ctx.fillStyle = pt.color;
-      const lx = Math.min(w-marginR-b.lw, Math.max(marginL, bcx - b.lw/2));
-      const firstLineY = b.y0 + lineH - 3;
-      ctx.fillText(b.freqLabel, lx, firstLineY);
-      ctx.fillText(b.pctLabel, lx, firstLineY + lineH);
     });
 
     scatterLegend.innerHTML = fileSummaries.map((fs, fi) => `
@@ -2142,6 +2108,8 @@
   }
 
   function renderVarianceTables(fileSummaries){
+    const topN = getTapTopN();
+    fileSummaries = fileSummaries.map(fs => ({ ...fs, freqSummary: fs.freqSummary.slice(0, topN) }));
     tapResultsBody.innerHTML = fileSummaries.map((fs, fi) => {
       const color = TAP_COLOURS[fi % TAP_COLOURS.length];
       const rows = fs.freqSummary.map(e => `
@@ -2239,10 +2207,12 @@
       if (!isFinite(max) || max <= min) max = min + 1;
       setFreqRange(min, max);
     }
-    minInput.addEventListener('change', applyRange);
-    maxInput.addEventListener('change', applyRange);
-    minInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
-    maxInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
+    if (minInput && maxInput){
+      minInput.addEventListener('change', applyRange);
+      maxInput.addEventListener('change', applyRange);
+      minInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
+      maxInput.addEventListener('keydown', e => { if (e.key === 'Enter') applyRange(); });
+    }
     bar.querySelectorAll('.scale-btn').forEach(btn => {
       btn.addEventListener('click', () => setScaleMode(btn.dataset.scale));
     });
