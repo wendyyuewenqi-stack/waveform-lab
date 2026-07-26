@@ -378,11 +378,19 @@
   .subtab-btn.active{border-color:var(--phosphor);color:var(--phosphor);font-weight:600;}
 
   .tap-rows{display:flex;flex-direction:column;gap:16px;max-height:640px;overflow-y:auto;}
-  .tap-row{border:1px solid var(--line);border-radius:var(--radius);padding:12px;}
+  .tap-row{border:1px solid var(--line);border-radius:var(--radius);padding:12px;transition:opacity .15s;}
+  .tap-row.excluded{opacity:0.45;}
   .tap-row .tr-head{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;
+    display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  }
+  .tap-row .tr-include{
+    flex-shrink:0;display:flex;align-items:center;cursor:pointer;
+  }
+  .tap-row .tr-include input[type="checkbox"]{
+    width:15px;height:15px;accent-color:var(--phosphor);cursor:pointer;
   }
   .tap-row .tr-name{
+    flex:1 1 auto;min-width:0;
     font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .tap-row .tr-remove{
@@ -496,7 +504,7 @@
           <input type="file" id="fileInput" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
         <div class="file-list" id="fileList">
-          <div class="empty-note">No files yet. Drop or select .wav files above — they're kept in memory for this session.</div>
+          <div class="empty-note">No files yet. Drop or select .wav files above — they're saved locally, so they'll still be here next time.</div>
         </div>
       </div>
     </div>
@@ -738,7 +746,7 @@
   </div>
 
   <footer>
-    Files are decoded and held in browser memory only — nothing leaves this tab, and the library resets on page reload.<br>
+    Files never leave this tab — they're decoded in browser memory and saved locally (IndexedDB), so your library is still here next time you open this page.<br>
     Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centred on the moment playback stopped.
   </footer>
 
@@ -823,9 +831,77 @@
   const tapResultsBody = el('tapResultsBody');
   const tapTopNSelect = el('tapTopNSelect');
   const tapFreqRangeLabel = el('tapFreqRangeLabel');
-  let tapLibrary = [];      // {id, name, size, url, audioBuffer, skipStart:'', skipEnd:''}
+  let tapLibrary = [];      // {id, name, size, audioBuffer, skipStart:'', skipEnd:'', included, _rawBuffer}
   let tapRunning = false;
   let lastTapFileSummaries = null; // cached results, so "Show top" can re-slice without re-running analysis
+
+  // ---------------- Persistence (IndexedDB) ----------------
+  // Keeps every loaded .wav — plus, for the Tap Analyser, its skip-start/
+  // skip-end values and included/excluded tick state — saved locally, so the
+  // library survives a page reload instead of disappearing when the tab closes.
+  const DB_NAME = 'waveform-lab-db';
+  const DB_VERSION = 1;
+  let dbPromise = null;
+
+  function openDB(){
+    if (dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject) => {
+      if (!window.indexedDB){ reject(new Error('IndexedDB unavailable')); return; }
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains('library')) db.createObjectStore('library', {keyPath:'id'});
+        if (!db.objectStoreNames.contains('tapLibrary')) db.createObjectStore('tapLibrary', {keyPath:'id'});
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+    return dbPromise;
+  }
+
+  async function idbPut(storeName, record){
+    try{
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).put(record);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }catch(err){ console.warn('Could not save to local storage', err); }
+  }
+
+  async function idbDelete(storeName, id){
+    try{
+      const db = await openDB();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        tx.objectStore(storeName).delete(id);
+        tx.oncomplete = resolve;
+        tx.onerror = () => reject(tx.error);
+      });
+    }catch(err){ console.warn('Could not remove from local storage', err); }
+  }
+
+  async function idbGetAll(storeName){
+    try{
+      const db = await openDB();
+      return await new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }catch(err){ console.warn('Could not read from local storage', err); return []; }
+  }
+
+  function persistTapEntry(entry){
+    idbPut('tapLibrary', {
+      id: entry.id, name: entry.name, size: entry.size,
+      skipStart: entry.skipStart, skipEnd: entry.skipEnd, included: entry.included,
+      arrayBuffer: entry._rawBuffer
+    });
+  }
 
   // ---------------- Utils ----------------
   function fmtTime(t){
@@ -1424,6 +1500,7 @@
             url, audioBuffer, wavInfo
           };
           library.push(entry);
+          idbPut('library', { id: entry.id, name: entry.name, size: entry.size, arrayBuffer: arrayBuffer.slice(0) });
           renderFileList();
           renderCompareRows();
           if (activeId === null) selectFile(entry.id);
@@ -1440,7 +1517,7 @@
   function renderFileList(){
     fileCount.textContent = `${library.length} loaded`;
     if (library.length === 0){
-      fileList.innerHTML = '<div class="empty-note">No files yet. Drop or select .wav files above — they\'re kept in memory for this session.</div>';
+      fileList.innerHTML = '<div class="empty-note">No files yet. Drop or select .wav files above — they\'re saved locally, so they\'ll still be here next time.</div>';
       return;
     }
     fileList.innerHTML = '';
@@ -1861,8 +1938,13 @@
         try{
           const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
           const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
-          const entry = { id: uid(), name: file.name, size: file.size, audioBuffer, skipStart:'', skipEnd:'' };
+          const entry = {
+            id: uid(), name: file.name, size: file.size, audioBuffer,
+            skipStart:'', skipEnd:'', included:true,
+            _rawBuffer: arrayBuffer.slice(0)
+          };
           tapLibrary.push(entry);
+          persistTapEntry(entry);
           renderTapRows();
           tmpCtx.close();
         }catch(err){
@@ -1887,18 +1969,37 @@
   }
 
   function renderTapRows(){
-    tapFileCount.textContent = `${tapLibrary.length} loaded`;
+    const selectedCount = tapLibrary.filter(e => e.included !== false).length;
+    tapFileCount.textContent = tapLibrary.length
+      ? `${tapLibrary.length} loaded · ${selectedCount} selected`
+      : '0 loaded';
     if (!tapLibrary.length){
       tapRows.innerHTML = '<div class="empty-note">No files yet.</div>';
       return;
     }
     tapRows.innerHTML = '';
     tapLibrary.forEach(entry => {
+      if (entry.included === undefined) entry.included = true;
       const row = document.createElement('div');
-      row.className = 'tap-row';
+      row.className = 'tap-row' + (entry.included ? '' : ' excluded');
 
       const head = document.createElement('div');
       head.className = 'tr-head';
+
+      const includeWrap = document.createElement('label');
+      includeWrap.className = 'tr-include';
+      includeWrap.title = 'Include this recording in the analysis and scatter graph';
+      const includeInput = document.createElement('input');
+      includeInput.type = 'checkbox';
+      includeInput.checked = entry.included;
+      includeInput.addEventListener('change', () => {
+        entry.included = includeInput.checked;
+        row.classList.toggle('excluded', !entry.included);
+        tapFileCount.textContent = `${tapLibrary.length} loaded · ${tapLibrary.filter(e => e.included !== false).length} selected`;
+        persistTapEntry(entry);
+      });
+      includeWrap.appendChild(includeInput);
+
       const nameEl = document.createElement('div');
       nameEl.className = 'tr-name';
       nameEl.textContent = entry.name;
@@ -1908,8 +2009,10 @@
       removeBtn.title = 'Remove this file';
       removeBtn.addEventListener('click', () => {
         tapLibrary = tapLibrary.filter(f => f.id !== entry.id);
+        idbDelete('tapLibrary', entry.id);
         renderTapRows();
       });
+      head.appendChild(includeWrap);
       head.appendChild(nameEl);
       head.appendChild(removeBtn);
 
@@ -1926,7 +2029,7 @@
       const ssInput = document.createElement('input');
       ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'auto';
       ssInput.value = entry.skipStart;
-      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawTapRowWave(canvas, entry); });
+      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawTapRowWave(canvas, entry); persistTapEntry(entry); });
       ssField.appendChild(ssInput);
 
       const seField = document.createElement('div');
@@ -1935,7 +2038,7 @@
       const seInput = document.createElement('input');
       seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
       seInput.value = entry.skipEnd;
-      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawTapRowWave(canvas, entry); });
+      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawTapRowWave(canvas, entry); persistTapEntry(entry); });
       seField.appendChild(seInput);
 
       fields.appendChild(ssField);
@@ -1968,6 +2071,12 @@
       tapStatus.classList.add('err');
       return;
     }
+    const activeEntries = tapLibrary.filter(e => e.included !== false);
+    if (!activeEntries.length){
+      tapStatus.textContent = 'Tick at least one recording to analyse.';
+      tapStatus.classList.add('err');
+      return;
+    }
     tapRunning = true;
     runTapBtn.disabled = true;
     tapStatus.classList.remove('err');
@@ -1983,9 +2092,9 @@
 
     const fileSummaries = [];
     const errors = [];
-    for (let i = 0; i < tapLibrary.length; i++){
-      const entry = tapLibrary[i];
-      tapStatus.textContent = `Analysing ${i+1}/${tapLibrary.length}: ${entry.name}…`;
+    for (let i = 0; i < activeEntries.length; i++){
+      const entry = activeEntries[i];
+      tapStatus.textContent = `Analysing ${i+1}/${activeEntries.length}: ${entry.name}…`;
       await sleep0();
       try{
         fileSummaries.push(await analyseTapFile(entry, opts));
@@ -2872,6 +2981,54 @@
   makeResizable(el('resizeCompare'), 260, 720);
   makeResizable(el('resizeTap'), 200, 640);
 
+  // ---------------- Restore saved libraries ----------------
+  async function restoreLibraries(){
+    // Rebuilds both file libraries from IndexedDB after a reload — including,
+    // for the Tap Analyser, each recording's skip-start/skip-end values and
+    // whether it was ticked for inclusion — so nothing has to be re-loaded.
+    try{
+      const [libRecords, tapRecords] = await Promise.all([idbGetAll('library'), idbGetAll('tapLibrary')]);
+
+      for (const rec of libRecords){
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
+          const wavInfo = parseWavHeader(rec.arrayBuffer.slice(0));
+          const blob = new Blob([rec.arrayBuffer], {type:'audio/wav'});
+          const url = URL.createObjectURL(blob);
+          library.push({ id: rec.id, name: rec.name, size: rec.size, url, audioBuffer, wavInfo });
+          tmpCtx.close();
+        }catch(err){
+          console.warn('Could not restore', rec.name, err);
+        }
+      }
+      if (library.length){
+        renderFileList();
+        renderCompareRows();
+        if (activeId === null) selectFile(library[0].id);
+      }
+
+      for (const rec of tapRecords){
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
+          tapLibrary.push({
+            id: rec.id, name: rec.name, size: rec.size, audioBuffer,
+            skipStart: rec.skipStart || '', skipEnd: rec.skipEnd || '',
+            included: rec.included !== false,
+            _rawBuffer: rec.arrayBuffer
+          });
+          tmpCtx.close();
+        }catch(err){
+          console.warn('Could not restore', rec.name, err);
+        }
+      }
+      if (tapLibrary.length) renderTapRows();
+    }catch(err){
+      console.warn('Could not restore saved libraries', err);
+    }
+  }
+
   // ---------------- Init ----------------
   resetScreen('idle');
   renderCompareRows();
@@ -2879,6 +3036,7 @@
   resetPreview();
   updateFreqRangeLabels();
   renderTapRows();
+  restoreLibraries();
 })();
 </script>
 </body>
