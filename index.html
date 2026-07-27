@@ -124,10 +124,18 @@
     border-color:var(--phosphor-dim);
     background:rgba(76,255,160,0.06);
   }
+  .file-item .fi-row{display:flex;align-items:center;gap:8px;}
   .file-item .fname{
+    flex:1 1 auto;min-width:0;
     color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .file-item.active .fname{color:var(--phosphor);}
+  .file-item .fi-remove{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .file-item .fi-remove:hover{border-color:var(--danger);color:var(--danger);}
   .file-item .fmeta{color:var(--text-faint);font-size:12px;}
   .empty-note{color:var(--text-faint);font-size:14px;line-height:1.7;padding:6px 2px;}
 
@@ -1532,10 +1540,64 @@
       const div = document.createElement('div');
       div.className = 'file-item' + (entry.id === activeId ? ' active' : '');
       const dur = entry.audioBuffer ? fmtTime(entry.audioBuffer.duration) : '--';
-      div.innerHTML = `<span class="fname">${entry.name}</span><span class="fmeta">${dur} &middot; ${fmtBytes(entry.size)}</span>`;
+
+      const row = document.createElement('div');
+      row.className = 'fi-row';
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'fname';
+      nameSpan.textContent = entry.name;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'fi-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove this file';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeFile(entry.id);
+      });
+      row.appendChild(nameSpan);
+      row.appendChild(removeBtn);
+
+      const metaSpan = document.createElement('span');
+      metaSpan.className = 'fmeta';
+      metaSpan.textContent = `${dur} · ${fmtBytes(entry.size)}`;
+
+      div.appendChild(row);
+      div.appendChild(metaSpan);
       div.addEventListener('click', () => selectFile(entry.id));
       fileList.appendChild(div);
     });
+  }
+
+  function removeFile(id){
+    const idx = library.findIndex(f => f.id === id);
+    if (idx === -1) return;
+    const entry = library[idx];
+    const wasActive = activeId === entry.id;
+    library.splice(idx, 1);
+    idbDelete('library', entry.id);
+    if (entry.url) URL.revokeObjectURL(entry.url);
+
+    if (wasActive){
+      stopPlaybackInternal();
+      if (audioEl){ audioEl.pause(); audioEl.src = ''; audioEl = null; }
+      activeId = null;
+      if (library.length){
+        selectFile(library[0].id);
+      } else {
+        nowPlayingLabel.textContent = 'No file selected';
+        curTimeEl.textContent = '0:00.000';
+        durTimeEl.textContent = '0:00.000';
+        scrub.value = 0;
+        scrub.disabled = true;
+        playBtn.disabled = true;
+        stopBtn.disabled = true;
+        sampleBtn.disabled = true;
+        resetSheet();
+        resetScreen('idle');
+      }
+    }
+    renderFileList();
+    renderCompareRows();
   }
 
   // ---------------- Compare page ----------------
