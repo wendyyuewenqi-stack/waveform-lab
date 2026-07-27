@@ -921,6 +921,12 @@
   }
   function uid(){ return Math.random().toString(36).slice(2,10); }
 
+  // Keeps a file library sorted alphabetically (naturally, so "file2" sorts
+  // before "file10") by name — used whenever a list is loaded or restored.
+  function sortByName(arr){
+    arr.sort((a,b) => a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:'base'}));
+  }
+
   // ---------------- WAV header parse (best-effort) ----------------
   function parseWavHeader(buf){
     try{
@@ -1500,6 +1506,7 @@
             url, audioBuffer, wavInfo
           };
           library.push(entry);
+          sortByName(library);
           idbPut('library', { id: entry.id, name: entry.name, size: entry.size, arrayBuffer: arrayBuffer.slice(0) });
           renderFileList();
           renderCompareRows();
@@ -1944,6 +1951,7 @@
             _rawBuffer: arrayBuffer.slice(0)
           };
           tapLibrary.push(entry);
+          sortByName(tapLibrary);
           persistTapEntry(entry);
           renderTapRows();
           tmpCtx.close();
@@ -3003,6 +3011,7 @@
         }
       }
       if (library.length){
+        sortByName(library);
         renderFileList();
         renderCompareRows();
         if (activeId === null) selectFile(library[0].id);
@@ -3023,7 +3032,10 @@
           console.warn('Could not restore', rec.name, err);
         }
       }
-      if (tapLibrary.length) renderTapRows();
+      if (tapLibrary.length){
+        sortByName(tapLibrary);
+        renderTapRows();
+      }
     }catch(err){
       console.warn('Could not restore saved libraries', err);
     }
