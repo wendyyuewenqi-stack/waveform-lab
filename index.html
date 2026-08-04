@@ -57,7 +57,9 @@
   /* ---------- Layout ---------- */
   .grid{display:grid;grid-template-columns:var(--lib-w,270px) 14px 1fr;column-gap:0;row-gap:20px;}
   #page-compare .grid{grid-template-columns:var(--lib-w,440px) 14px 1fr;}
+  #page-cluster .grid{grid-template-columns:var(--lib-w,380px) 14px 1fr;}
   @media (max-width:1000px){#page-compare .grid{grid-template-columns:1fr;} #page-compare .resize-handle{display:none;}}
+  @media (max-width:1080px){#page-cluster .grid{grid-template-columns:1fr;} #page-cluster .resize-handle{display:none;}}
   @media (max-width:820px){.grid{grid-template-columns:1fr;} .resize-handle{display:none;}}
 
   .resize-handle{
@@ -348,7 +350,8 @@
 
   /* ---------- Home ---------- */
   .home-intro{color:var(--text-dim);font-size:15px;line-height:1.7;max-width:640px;margin:0 0 26px;}
-  .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  .home-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;}
+  @media (max-width:1080px){.home-cards{grid-template-columns:1fr 1fr;}}
   @media (max-width:760px){.home-cards{grid-template-columns:1fr;}}
   .home-card{
     text-align:left;cursor:pointer;background:var(--panel);
@@ -417,11 +420,16 @@
   }
   .tap-field input::placeholder{color:var(--text-faint);}
 
-  details.tap-advanced{margin:14px 0 18px;border:1px solid var(--line);border-radius:var(--radius);padding:2px 14px;}
+  details.tap-advanced{margin:16px 0 18px;border:1px solid var(--line);border-radius:var(--radius);padding:2px 16px;}
   details.tap-advanced summary{
-    cursor:pointer;padding:10px 0;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);
+    cursor:pointer;padding:12px 0;font-size:12px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-dim);
   }
-  details.tap-advanced .adv-grid{display:flex;gap:14px;flex-wrap:wrap;padding-bottom:14px;}
+  details.tap-advanced .adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;padding-bottom:16px;}
+  details.tap-advanced .adv-grid .tap-field input{width:100%;}
+  @media (max-width:400px){details.tap-advanced .adv-grid{grid-template-columns:1fr;}}
+
+  .settings-section{margin-top:20px;padding-top:18px;border-top:1px solid var(--line-soft);}
+  .engine-note{font-size:12.5px;color:var(--text-faint);line-height:1.6;margin-top:8px;}
 
   button.run-btn{
     width:100%;margin-top:4px;
@@ -441,7 +449,33 @@
   .scatter-legend .sl-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
   .scatter-legend .sl-swatch{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
 
-  .variance-block{margin-top:18px;}
+  .scatter-tooltip{
+    display:none;position:absolute;z-index:5;pointer-events:none;
+    max-width:230px;padding:9px 11px;border:1px solid var(--phosphor-dim);border-radius:var(--radius);
+    background:var(--panel);box-shadow:0 6px 18px rgba(0,0,0,0.16);
+    max-height:340px;overflow-y:auto;
+  }
+  .scatter-tooltip.visible{display:block;}
+  .scatter-tooltip.multi{max-width:250px;}
+  .scatter-tooltip .tt-multi-note{
+    font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);
+    margin-bottom:8px;padding-bottom:7px;border-bottom:1px dashed var(--line);
+  }
+  .scatter-tooltip .tt-entry + .tt-entry{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);}
+  .scatter-tooltip .tt-title{
+    display:flex;align-items:center;gap:7px;font-weight:700;color:var(--text);
+    font-size:12px;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .scatter-tooltip .tt-swatch{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .scatter-tooltip .tt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;}
+  .scatter-tooltip .tt-stat{display:flex;flex-direction:column;gap:2px;}
+  .scatter-tooltip .tt-stat b{font-size:13px;color:var(--phosphor);font-weight:700;}
+  .scatter-tooltip .tt-stat span{
+    font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);
+  }
+
+  .variance-block{margin-top:26px;padding-top:22px;border-top:1px solid var(--line-soft);}
+  .variance-block:first-child{margin-top:0;padding-top:0;border-top:none;}
   .variance-block .vb-title{
     font-size:13px;color:var(--text);font-weight:600;margin-bottom:8px;
     display:flex;align-items:center;gap:8px;
@@ -477,11 +511,12 @@
     <button class="tab-btn" data-page="analyze">Waveform</button>
     <button class="tab-btn" data-page="compare">Compare</button>
     <button class="tab-btn" data-page="tap">Tap Analyser</button>
+    <button class="tab-btn" data-page="cluster">Clustering</button>
   </div>
 
   <!-- ============ PAGE: HOME ============ -->
   <div class="page active" id="page-home">
-    <p class="home-intro">Pick a tool. Waveform Lab plays back a single .wav file and freezes a spectrum snapshot at any moment. Tap Analyser detects multiple tap/pluck transients across one or more .wav files, FFTs each one, and plots the most consistent frequencies.</p>
+    <p class="home-intro">Pick a tool. Waveform Lab plays back a single .wav file and freezes a spectrum snapshot at any moment. Tap Analyser detects multiple tap/pluck transients across one or more .wav files, FFTs each one, and plots the most consistent frequencies. Clustering groups tap events across files by their frequency signature using an unsupervised Random Forest.</p>
     <div class="home-cards">
       <div class="home-card" data-goto="analyze">
         <div class="hc-icon">&#9658;</div>
@@ -493,6 +528,12 @@
         <div class="hc-icon">&#10005;</div>
         <div class="hc-title">Tap Analyser</div>
         <div class="hc-desc">Feed in one or more .wav files of taps or plucks. Auto-detects each transient (with optional skip-start / skip-end trimming), FFTs every event, and scatters the most common frequencies across files with a variance summary.</div>
+        <div class="hc-go">Open &rarr;</div>
+      </div>
+      <div class="home-card" data-goto="cluster">
+        <div class="hc-icon">&#9678;</div>
+        <div class="hc-title">Clustering</div>
+        <div class="hc-desc">Detects taps across your .wav files, FFTs each one, then groups them with an unsupervised Random Forest (real vs. shuffled-column proximity clustering, cross-checked against KMeans). Reports cluster sizes, per-file breakdown, and the most informative frequency bins.</div>
         <div class="hc-go">Open &rarr;</div>
       </div>
     </div>
@@ -738,6 +779,7 @@
         </div>
         <div class="screen">
           <canvas id="scatterCanvas" width="1200" height="440"></canvas>
+          <div class="scatter-tooltip" id="scatterTooltip"></div>
         </div>
         <div class="scatter-legend" id="scatterLegend"></div>
       </div>
@@ -746,6 +788,65 @@
         <div class="panel-label"><span>Per-File Variance Summary</span></div>
         <div id="tapResultsBody">
           <div class="placeholder">Load .wav files on the left and press Run Analysis — each file's most consistent tap/pluck frequencies (however many you chose above) will be listed here, with a combined scatter graph above.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ============ PAGE: CLUSTERING ============ -->
+  <div class="page" id="page-cluster">
+  <div class="grid">
+
+    <!-- LEFT: LIBRARY + PER-FILE CROP CONFIG -->
+    <div>
+      <div class="panel">
+        <div class="panel-label"><span>Library</span><span class="count" id="clusterFileCount">0 loaded</span></div>
+        <label class="dropzone" id="dropzoneCluster">
+          <span class="big">+</span>
+          Load .wav file(s)
+          <input type="file" id="fileInputCluster" accept=".wav,audio/wav,audio/x-wav" multiple>
+        </label>
+        <div class="empty-note" style="margin-bottom:14px;">Crop Start / Crop End trim a fixed amount off the beginning/end of each file before tap detection (e.g. setup noise or trailing silence). Leave blank for no crop.</div>
+        <div class="tap-rows" id="clusterRows">
+          <div class="empty-note">No files yet.</div>
+        </div>
+
+        <details class="tap-advanced">
+          <summary>Advanced settings</summary>
+          <div class="adv-grid">
+            <div class="tap-field"><label>Window (ms)</label><input type="number" id="clusterWindowMs" value="120" min="10" step="10"></div>
+            <div class="tap-field"><label>Trees (RF estimators)</label><input type="number" id="clusterNTrees" value="500" min="10" step="10"></div>
+            <div class="tap-field"><label>Force k (blank = auto)</label><input type="number" id="clusterForceK" placeholder="auto" min="2" step="1"></div>
+            <div class="tap-field"><label>Min gap (s)</label><input type="number" id="clusterMinGap" value="0.15" min="0.01" step="0.05"></div>
+          </div>
+        </details>
+
+        <div class="settings-section">
+          <div class="tap-field">
+            <label>Compute engine</label>
+            <select id="clusterEngine" class="smoothing-select" style="width:100%;">
+              <option value="js" selected>JavaScript (built-in, instant, offline)</option>
+              <option value="python">Python via Pyodide (exact match to your script)</option>
+            </select>
+          </div>
+          <div class="engine-note" id="clusterEngineNote">Runs the port of the algorithm in your browser — instant results, no internet needed.</div>
+        </div>
+
+        <button class="run-btn" id="runClusterBtn" style="margin-top:18px;">Run Clustering</button>
+        <div class="tap-status" id="clusterStatus"></div>
+      </div>
+    </div>
+
+    <div class="resize-handle" id="resizeCluster" title="Drag to resize"></div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="panel" id="clusterResultsPanel">
+        <div class="panel-label"><span>Clustering Results <span class="freq-range-label" style="color:var(--text-faint);">(RF-proximity clustering, FFT features up to 1500 Hz)</span></span></div>
+        <div id="clusterResultsBody">
+          <div class="placeholder">Load .wav files on the left and press Run Clustering — taps are detected in every ticked recording, FFT'd into log-spaced frequency-bin features (fmax 1500 Hz), then grouped by an unsupervised Random Forest. Cluster sizes, per-file breakdown, and the most informative frequency bins will be listed here.</div>
         </div>
       </div>
     </div>
@@ -836,19 +937,42 @@
   const tapStatus = el('tapStatus');
   const scatterCanvas = el('scatterCanvas');
   const scatterLegend = el('scatterLegend');
+  const scatterTooltip = el('scatterTooltip');
   const tapResultsBody = el('tapResultsBody');
   const tapTopNSelect = el('tapTopNSelect');
   const tapFreqRangeLabel = el('tapFreqRangeLabel');
   let tapLibrary = [];      // {id, name, size, audioBuffer, skipStart:'', skipEnd:'', included, _rawBuffer}
   let tapRunning = false;
   let lastTapFileSummaries = null; // cached results, so "Show top" can re-slice without re-running analysis
+  let scatterPoints = [];   // {cx, cy, color, label, freq, avgPct, ...} — hit-testable dots on the scatter graph
+
+  // Clustering page state
+  const dropzoneCluster = el('dropzoneCluster');
+  const fileInputCluster = el('fileInputCluster');
+  const clusterRows = el('clusterRows');
+  const clusterFileCount = el('clusterFileCount');
+  const runClusterBtn = el('runClusterBtn');
+  const clusterStatus = el('clusterStatus');
+  const clusterResultsBody = el('clusterResultsBody');
+  const clusterEngineSelect = el('clusterEngine');
+  const clusterEngineNote = el('clusterEngineNote');
+  let clusterLibrary = [];  // {id, name, size, audioBuffer, cropStart:'', cropEnd:'', included, _rawBuffer}
+  let clusterRunning = false;
+
+  const CLUSTER_ENGINE_NOTES = {
+    js: 'Runs the port of the algorithm in your browser — instant results, no internet needed.',
+    python: 'Runs your actual random_forest.py functions, unmodified, via a real Python (numpy/scipy/scikit-learn) build compiled to WebAssembly. First run downloads ~40MB and needs internet; cached after that.',
+  };
+  clusterEngineSelect.addEventListener('change', () => {
+    clusterEngineNote.textContent = CLUSTER_ENGINE_NOTES[clusterEngineSelect.value] || '';
+  });
 
   // ---------------- Persistence (IndexedDB) ----------------
   // Keeps every loaded .wav — plus, for the Tap Analyser, its skip-start/
   // skip-end values and included/excluded tick state — saved locally, so the
   // library survives a page reload instead of disappearing when the tab closes.
   const DB_NAME = 'waveform-lab-db';
-  const DB_VERSION = 1;
+  const DB_VERSION = 2;
   let dbPromise = null;
 
   function openDB(){
@@ -860,6 +984,7 @@
         const db = req.result;
         if (!db.objectStoreNames.contains('library')) db.createObjectStore('library', {keyPath:'id'});
         if (!db.objectStoreNames.contains('tapLibrary')) db.createObjectStore('tapLibrary', {keyPath:'id'});
+        if (!db.objectStoreNames.contains('clusterLibrary')) db.createObjectStore('clusterLibrary', {keyPath:'id'});
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -907,6 +1032,14 @@
     idbPut('tapLibrary', {
       id: entry.id, name: entry.name, size: entry.size,
       skipStart: entry.skipStart, skipEnd: entry.skipEnd, included: entry.included,
+      arrayBuffer: entry._rawBuffer
+    });
+  }
+
+  function persistClusterEntry(entry){
+    idbPut('clusterLibrary', {
+      id: entry.id, name: entry.name, size: entry.size,
+      cropStart: entry.cropStart, cropEnd: entry.cropEnd, included: entry.included,
       arrayBuffer: entry._rawBuffer
     });
   }
@@ -1084,6 +1217,661 @@
       for (let k = 0; k < n; k++){ outRe[k] /= n; outIm[k] /= n; }
     }
     return { re: outRe, im: outIm };
+  }
+
+  // ---------------- Clustering DSP/ML (client-side port of random_forest.py) ----------------
+  // Every function below was ported from random_forest.py and cross-checked
+  // numerically against the real Python (numpy/scipy/scikit-learn) pipeline
+  // before being wired in here — see the standalone validation scripts used
+  // during development for the exact diffs. Uses the fftInPlace/ifftInPlace/
+  // bluesteinDFT/nextPow2 already defined above.
+
+  // rfft magnitude spectrum matching np.fft.rfft(x) magnitude bin-for-bin
+  function rfftMag(signal){
+    const n = signal.length;
+    const re = Float64Array.from(signal);
+    const im = new Float64Array(n);
+    const { re: outRe, im: outIm } = bluesteinDFT(re, im, false);
+    const half = Math.floor(n/2) + 1;
+    const mag = new Float64Array(half);
+    for (let k = 0; k < half; k++) mag[k] = Math.hypot(outRe[k], outIm[k]);
+    return mag;
+  }
+
+  // scipy.signal.find_peaks(x, height, distance) equivalent: local maxima
+  // (plateaus resolved to their midpoint, matching scipy's convention), then
+  // filtered by minimum height, then thinned so no two survivors are closer
+  // than `distance` samples — processed in descending-height priority order,
+  // exactly matching scipy's `_select_by_peak_distance`.
+  function findPeaksHeightDistance(x, height, distance){
+    const n = x.length;
+    const rawPeaks = [];
+    let i = 1;
+    while (i < n - 1){
+      if (x[i-1] < x[i]){
+        let iAhead = i + 1;
+        while (iAhead < n - 1 && x[iAhead] === x[i]) iAhead++;
+        if (x[iAhead] < x[i]){
+          const leftEdge = i, rightEdge = iAhead - 1;
+          rawPeaks.push(Math.floor((leftEdge + rightEdge) / 2));
+          i = iAhead;
+          continue;
+        }
+      }
+      i++;
+    }
+    let peaks = height == null ? rawPeaks : rawPeaks.filter(p => x[p] >= height);
+    if (distance != null && distance >= 1 && peaks.length > 1){
+      const order = peaks.slice().sort((a,b) => x[b] - x[a]);
+      const keep = new Set(peaks);
+      for (const p of order){
+        if (!keep.has(p)) continue;
+        for (const q of peaks){
+          if (q !== p && keep.has(q) && Math.abs(q - p) < distance) keep.delete(q);
+        }
+      }
+      peaks = peaks.filter(p => keep.has(p));
+    }
+    peaks.sort((a,b) => a - b);
+    return peaks;
+  }
+
+  // Matches Python's int(sr*sec) truncation (not round) exactly.
+  function trimSignalRF(signal, sr, skipStartSec, skipEndSec){
+    const startIdx = Math.floor(sr * skipStartSec);
+    let endIdx = signal.length - Math.floor(sr * skipEndSec);
+    endIdx = Math.max(startIdx, endIdx);
+    return signal.slice(startIdx, endIdx);
+  }
+
+  // moving-average energy envelope (mode="same" convolution of x^2 with a
+  // box filter), then find_peaks(height=rel*max, distance) -> onset sample
+  // indices, optionally thinned to the N loudest if expectedTaps is given.
+  function detectTapsRF(signal, sr, opts){
+    opts = opts || {};
+    const minGapMs = opts.minGapMs != null ? opts.minGapMs : 150;
+    const energyWinMs = opts.energyWinMs != null ? opts.energyWinMs : 10;
+    const relThreshold = opts.relThreshold != null ? opts.relThreshold : 0.15;
+    const expectedTaps = opts.expectedTaps != null ? opts.expectedTaps : null;
+
+    const win = Math.max(1, Math.floor(sr * energyWinMs / 1000));
+    const n = signal.length;
+    const sq = new Float64Array(n);
+    for (let i = 0; i < n; i++) sq[i] = signal[i]*signal[i];
+
+    const energy = new Float64Array(n);
+    // Matches numpy's convolve(..., mode="same") alignment exactly: for a
+    // kernel of length `win`, output[k] sums signal[k+kStart .. k+kEnd] where
+    // s0 = floor((win-1)/2), kStart = s0-win+1, kEnd = s0.
+    const s0 = Math.floor((win-1)/2);
+    const kStart = s0 - win + 1;
+    const kEnd = s0;
+    for (let i = 0; i < n; i++){
+      let sum = 0;
+      const lo = Math.max(0, i + kStart), hi = Math.min(n-1, i + kEnd);
+      for (let j = lo; j <= hi; j++) sum += sq[j];
+      energy[i] = sum / win;
+    }
+
+    const minDistance = Math.floor(sr * minGapMs / 1000);
+    let maxE = -Infinity;
+    for (let i = 0; i < n; i++) if (energy[i] > maxE) maxE = energy[i];
+    const height = relThreshold * maxE;
+
+    let peaks = findPeaksHeightDistance(energy, height, minDistance);
+
+    if (expectedTaps != null && peaks.length > expectedTaps){
+      const withE = peaks.map(p => ({ p, e: energy[p] }));
+      withE.sort((a,b) => b.e - a.e);
+      peaks = withE.slice(0, expectedTaps).map(o => o.p).sort((a,b) => a-b);
+    }
+    return peaks;
+  }
+
+  function extractWindowRF(signal, sr, onsetIdx, windowMs, preMs){
+    windowMs = windowMs != null ? windowMs : 500;
+    preMs = preMs != null ? preMs : 5;
+    const pre = Math.floor(sr * preMs / 1000);
+    const length = Math.floor(sr * windowMs / 1000);
+    const start = Math.max(0, onsetIdx - pre);
+    const segment = new Float64Array(length);
+    const n = signal.length;
+    for (let i = 0; i < length; i++){
+      const si = start + i;
+      segment[i] = si < n ? signal[si] : 0;
+    }
+    return segment;
+  }
+
+  // Average FFT magnitude of quiet gaps between taps (plus the lead-in before
+  // the first tap, if there's room) -> a background-noise profile to subtract
+  // from each tap's own spectrum in fftFeaturesRF.
+  function estimateNoiseSpectrumRF(signal, sr, onsets, windowMs, tailMarginMs){
+    windowMs = windowMs != null ? windowMs : 120;
+    tailMarginMs = tailMarginMs != null ? tailMarginMs : 300;
+    const length = Math.floor(sr * windowMs / 1000);
+    const margin = Math.floor(sr * tailMarginMs / 1000);
+    const segments = [];
+
+    if (onsets.length > 0 && onsets[0] - length > 0){
+      segments.push(signal.slice(0, length));
+    }
+    for (let k = 0; k < onsets.length - 1; k++){
+      const a = onsets[k], b = onsets[k+1];
+      const start = a + margin, end = start + length;
+      if (end < b) segments.push(signal.slice(start, end));
+    }
+    if (!segments.length) return null;
+
+    const hann = new Float64Array(length);
+    for (let i = 0; i < length; i++) hann[i] = 0.5 - 0.5*Math.cos(2*Math.PI*i/(length-1));
+
+    let sumSpec = null;
+    for (const seg of segments){
+      const windowed = new Float64Array(length);
+      for (let i = 0; i < length; i++) windowed[i] = seg[i] * hann[i];
+      const mag = rfftMag(windowed);
+      if (!sumSpec) sumSpec = new Float64Array(mag.length);
+      for (let i = 0; i < mag.length; i++) sumSpec[i] += mag[i];
+    }
+    for (let i = 0; i < sumSpec.length; i++) sumSpec[i] /= segments.length;
+    return sumSpec;
+  }
+
+  function getBinEdgesRF(sr, nBins, fmin, fmax){
+    nBins = nBins != null ? nBins : 64;
+    fmin = fmin != null ? fmin : 20;
+    fmax = fmax != null ? fmax : sr/2;
+    const edges = new Float64Array(nBins + 1);
+    const logMin = Math.log10(fmin), logMax = Math.log10(fmax);
+    for (let i = 0; i <= nBins; i++){
+      edges[i] = Math.pow(10, logMin + (logMax - logMin) * (i / nBins));
+    }
+    return edges;
+  }
+
+  function fftFeaturesRF(segment, sr, opts){
+    opts = opts || {};
+    const nBins = opts.nBins != null ? opts.nBins : 64;
+    const fmin = opts.fmin != null ? opts.fmin : 20;
+    const fmax = opts.fmax != null ? opts.fmax : sr/2;
+    const noiseSpectrum = opts.noiseSpectrum || null;
+
+    const length = segment.length;
+    const hann = new Float64Array(length);
+    for (let i = 0; i < length; i++) hann[i] = 0.5 - 0.5*Math.cos(2*Math.PI*i/(length-1));
+    const windowed = new Float64Array(length);
+    for (let i = 0; i < length; i++) windowed[i] = segment[i] * hann[i];
+
+    let spectrum = rfftMag(windowed);
+    if (noiseSpectrum){
+      spectrum = spectrum.map((v,i) => Math.max(0, v - (noiseSpectrum[i]||0)));
+    }
+
+    const freqs = new Float64Array(spectrum.length);
+    for (let k = 0; k < spectrum.length; k++) freqs[k] = k * sr / length;
+
+    const edges = getBinEdgesRF(sr, nBins, fmin, fmax);
+    const features = new Float64Array(nBins);
+    for (let i = 0; i < nBins; i++){
+      let sum = 0, count = 0;
+      for (let k = 0; k < freqs.length; k++){
+        if (freqs[k] >= edges[i] && freqs[k] < edges[i+1]){ sum += spectrum[k]; count++; }
+      }
+      features[i] = count > 0 ? sum / count : 0;
+    }
+    for (let i = 0; i < nBins; i++) features[i] = Math.log1p(features[i]);
+    return features;
+  }
+
+  // ---- ML utilities shared by KMeans + Random Forest below ----
+
+  // Deterministic, seedable PRNG (mulberry32). Not bit-compatible with numpy's
+  // Mersenne Twister — sklearn's exact random_state sequence can't be
+  // reproduced from JS — but fully reproducible run-to-run, which is what
+  // matters for a stable UI.
+  function makeRng(seed){
+    let a = seed >>> 0;
+    return function(){
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function euclideanSq(a, b){
+    let s = 0;
+    for (let i = 0; i < a.length; i++){ const d = a[i]-b[i]; s += d*d; }
+    return s;
+  }
+
+  // StandardScaler: zero mean, unit variance per column (population std,
+  // ddof=0, matching sklearn.preprocessing.StandardScaler). A zero-variance
+  // column is left unscaled (scale forced to 1), same as sklearn's
+  // _handle_zeros_in_scale.
+  function standardScale(X){
+    const n = X.length, d = X[0].length;
+    const mean = new Float64Array(d), std = new Float64Array(d);
+    for (let j = 0; j < d; j++){
+      let s = 0;
+      for (let i = 0; i < n; i++) s += X[i][j];
+      mean[j] = s / n;
+    }
+    for (let j = 0; j < d; j++){
+      let s = 0;
+      for (let i = 0; i < n; i++){ const dv = X[i][j]-mean[j]; s += dv*dv; }
+      let sd = Math.sqrt(s / n);
+      std[j] = sd === 0 ? 1 : sd;
+    }
+    const Xs = X.map(row => row.map((v,j) => (v - mean[j]) / std[j]));
+    return { Xs, mean, std };
+  }
+
+  // k-means++ seeding (Arthur & Vassilvitskii 2007), the sklearn default init.
+  function kmeansPlusPlusInit(X, k, rng){
+    const n = X.length;
+    const centers = [];
+    const first = Math.floor(rng() * n);
+    centers.push(X[first].slice());
+    const distSq = new Float64Array(n).fill(Infinity);
+    for (let c = 1; c < k; c++){
+      for (let i = 0; i < n; i++){
+        const dc = euclideanSq(X[i], centers[centers.length-1]);
+        if (dc < distSq[i]) distSq[i] = dc;
+      }
+      let total = 0;
+      for (let i = 0; i < n; i++) total += distSq[i];
+      let r = rng() * total, idx = 0;
+      for (let i = 0; i < n; i++){ r -= distSq[i]; if (r <= 0){ idx = i; break; } idx = i; }
+      centers.push(X[idx].slice());
+    }
+    return centers;
+  }
+
+  // One Lloyd's-algorithm run to convergence (or maxIter), matching sklearn's
+  // KMeans (init=k-means++, algorithm="lloyd").
+  function kmeansSingleRun(X, k, rng, maxIter, tol){
+    maxIter = maxIter != null ? maxIter : 300;
+    tol = tol != null ? tol : 1e-4;
+    const n = X.length, d = X[0].length;
+    let centers = kmeansPlusPlusInit(X, k, rng);
+    let labels = new Int32Array(n);
+
+    for (let iter = 0; iter < maxIter; iter++){
+      let changed = false;
+      for (let i = 0; i < n; i++){
+        let best = 0, bestD = Infinity;
+        for (let c = 0; c < k; c++){
+          const dd = euclideanSq(X[i], centers[c]);
+          if (dd < bestD){ bestD = dd; best = c; }
+        }
+        if (labels[i] !== best){ labels[i] = best; changed = true; }
+      }
+
+      const newCenters = Array.from({length:k}, () => new Float64Array(d));
+      const counts = new Int32Array(k);
+      for (let i = 0; i < n; i++){
+        const c = labels[i];
+        counts[c]++;
+        for (let j = 0; j < d; j++) newCenters[c][j] += X[i][j];
+      }
+      let shift = 0;
+      for (let c = 0; c < k; c++){
+        if (counts[c] === 0){ newCenters[c] = centers[c]; continue; }
+        for (let j = 0; j < d; j++) newCenters[c][j] /= counts[c];
+        shift += euclideanSq(newCenters[c], centers[c]);
+      }
+      centers = newCenters.map(a => Array.from(a));
+      if (!changed || shift < tol) break;
+    }
+
+    let inertia = 0;
+    for (let i = 0; i < n; i++) inertia += euclideanSq(X[i], centers[labels[i]]);
+    return { labels: Array.from(labels), centers, inertia };
+  }
+
+  // KMeans with n_init restarts, keeping the lowest-inertia run.
+  function kmeansFit(X, k, opts){
+    opts = opts || {};
+    const nInit = opts.nInit != null ? opts.nInit : 10;
+    const rng = opts.rng || makeRng(42);
+    let best = null;
+    for (let r = 0; r < nInit; r++){
+      const run = kmeansSingleRun(X, k, rng, opts.maxIter, opts.tol);
+      if (!best || run.inertia < best.inertia) best = run;
+    }
+    return best;
+  }
+
+  // Exact silhouette score (mean silhouette coefficient), matching
+  // sklearn.metrics.silhouette_score with metric="euclidean".
+  function silhouetteScore(X, labels){
+    const n = X.length;
+    const clusters = {};
+    for (let i = 0; i < n; i++){
+      (clusters[labels[i]] = clusters[labels[i]] || []).push(i);
+    }
+    const clusterIds = Object.keys(clusters);
+    if (clusterIds.length < 2) return NaN;
+
+    const dist = Array.from({length:n}, () => new Float64Array(n));
+    for (let i = 0; i < n; i++){
+      for (let j = i+1; j < n; j++){
+        const dd = Math.sqrt(euclideanSq(X[i], X[j]));
+        dist[i][j] = dd; dist[j][i] = dd;
+      }
+    }
+
+    let total = 0;
+    for (let i = 0; i < n; i++){
+      const own = clusters[labels[i]];
+      let a = 0;
+      if (own.length > 1){
+        let s = 0;
+        for (const j of own) if (j !== i) s += dist[i][j];
+        a = s / (own.length - 1);
+      } else {
+        continue; // singleton cluster -> silhouette 0 for this point (sklearn convention)
+      }
+      let b = Infinity;
+      for (const cid of clusterIds){
+        if (Number(cid) === labels[i]) continue;
+        const members = clusters[cid];
+        let s = 0;
+        for (const j of members) s += dist[i][j];
+        const meanD = s / members.length;
+        if (meanD < b) b = meanD;
+      }
+      const s = (b - a) / Math.max(a, b);
+      total += s;
+    }
+    return total / n;
+  }
+
+  // KMeans clustering used both to select k (via silhouette) and as the
+  // cross-check clustering against the RF-proximity labels. Mirrors
+  // kmeans_cluster() in the Python script.
+  function kmeansClusterAutoK(X, opts){
+    opts = opts || {};
+    const { Xs } = standardScale(X);
+    const n = X.length;
+    const rng = makeRng(opts.randomState != null ? opts.randomState : 42);
+
+    if (opts.k != null){
+      const run = kmeansFit(Xs, opts.k, { nInit: 10, rng });
+      return { labels: run.labels, k: opts.k, Xs, scores: null };
+    }
+
+    const kRange = opts.kRange || [2,3,4,5,6,7,8];
+    let bestK = null, bestScore = -Infinity, bestLabels = null;
+    const scores = [];
+    for (const k of kRange){
+      if (k >= n) break;
+      const run = kmeansFit(Xs, k, { nInit: 10, rng });
+      const score = silhouetteScore(Xs, run.labels);
+      scores.push({ k, score });
+      if (score > bestScore){ bestScore = score; bestK = k; bestLabels = run.labels; }
+    }
+    return { labels: bestLabels, k: bestK, Xs, scores };
+  }
+
+  // ---- PRIMARY: Random Forest real-vs-synthetic proximity clustering ----
+  // (Shi & Horvath 2006 unsupervised-RF trick), mirroring
+  // rf_proximity_clustering() in the Python script.
+
+  // Independent per-column shuffle: X_synth[i][j] = X[perm_j[i]][j], with a
+  // fresh random permutation perm_j for every column j.
+  function columnShuffle(X, rng){
+    const n = X.length, d = X[0].length;
+    const synth = Array.from({length:n}, () => new Array(d));
+    for (let j = 0; j < d; j++){
+      const order = Array.from({length:n}, (_,i) => i);
+      for (let i = n-1; i > 0; i--){
+        const r = Math.floor(rng() * (i+1));
+        const tmp = order[i]; order[i] = order[r]; order[r] = tmp;
+      }
+      for (let i = 0; i < n; i++) synth[i][j] = X[order[i]][j];
+    }
+    return synth;
+  }
+
+  function giniImpurity(counts, total){
+    if (total === 0) return 0;
+    let sumSq = 0;
+    for (const c of counts) sumSq += (c/total)*(c/total);
+    return 1 - sumSq;
+  }
+
+  // Find the best (feature, threshold) split among a random feature subset,
+  // scanning midpoint thresholds between consecutive distinct sorted values,
+  // subject to min_samples_leaf on both children.
+  function bestSplitCART(X, y, idx, nClasses, featureSubset, minSamplesLeaf){
+    const n = idx.length;
+    const totalCounts = new Array(nClasses).fill(0);
+    for (const i of idx) totalCounts[y[i]]++;
+    const parentGini = giniImpurity(totalCounts, n);
+    if (parentGini === 0) return null;
+
+    let best = null;
+    for (const f of featureSubset){
+      const sorted = idx.slice().sort((a,b) => X[a][f] - X[b][f]);
+      const leftCounts = new Array(nClasses).fill(0);
+      const rightCounts = totalCounts.slice();
+      for (let pos = 0; pos < n - 1; pos++){
+        const i = sorted[pos];
+        leftCounts[y[i]]++; rightCounts[y[i]]--;
+        const nLeft = pos + 1, nRight = n - nLeft;
+        const vHere = X[sorted[pos]][f], vNext = X[sorted[pos+1]][f];
+        if (vHere === vNext) continue;
+        if (nLeft < minSamplesLeaf || nRight < minSamplesLeaf) continue;
+
+        const gLeft = giniImpurity(leftCounts, nLeft);
+        const gRight = giniImpurity(rightCounts, nRight);
+        const weighted = (nLeft/n)*gLeft + (nRight/n)*gRight;
+        const decrease = parentGini - weighted;
+        if (!best || decrease > best.impurityDecrease + 1e-15){
+          best = {
+            feature: f, threshold: (vHere + vNext) / 2,
+            impurityDecrease: decrease,
+            leftIdx: sorted.slice(0, nLeft), rightIdx: sorted.slice(nLeft),
+            leftGini: gLeft, rightGini: gRight, nLeft, nRight,
+          };
+        }
+      }
+    }
+    return best;
+  }
+
+  function sampleFeatureSubset(nFeatures, maxFeatures, rng){
+    const all = Array.from({length:nFeatures}, (_,i) => i);
+    for (let i = all.length-1; i > 0; i--){
+      const r = Math.floor(rng()*(i+1));
+      const t = all[i]; all[i] = all[r]; all[r] = t;
+    }
+    return all.slice(0, maxFeatures);
+  }
+
+  // Recursively grow one CART tree (Gini impurity, min_samples_leaf, random
+  // per-split feature subsampling of size max_features). Leaf nodes carry a
+  // unique numeric id (for proximity co-occurrence). Also accumulates
+  // per-feature impurity-decrease importances into `importanceAccum`.
+  function buildCARTTree(X, y, idx, nClasses, maxFeatures, minSamplesLeaf, rng, importanceAccum, leafIdCounter){
+    const counts = new Array(nClasses).fill(0);
+    for (const i of idx) counts[y[i]]++;
+    let majority = 0;
+    for (let c = 1; c < nClasses; c++) if (counts[c] > counts[majority]) majority = c;
+
+    if (idx.length < 2*minSamplesLeaf){
+      return { leaf: true, id: leafIdCounter.next++, majority, nSamples: idx.length };
+    }
+
+    const featureSubset = sampleFeatureSubset(X[0].length, maxFeatures, rng);
+    const split = bestSplitCART(X, y, idx, nClasses, featureSubset, minSamplesLeaf);
+    if (!split){
+      return { leaf: true, id: leafIdCounter.next++, majority, nSamples: idx.length };
+    }
+
+    importanceAccum[split.feature] += idx.length * giniImpurity(counts, idx.length)
+      - split.nLeft * split.leftGini - split.nRight * split.rightGini;
+
+    const left = buildCARTTree(X, y, split.leftIdx, nClasses, maxFeatures, minSamplesLeaf, rng, importanceAccum, leafIdCounter);
+    const right = buildCARTTree(X, y, split.rightIdx, nClasses, maxFeatures, minSamplesLeaf, rng, importanceAccum, leafIdCounter);
+    return { leaf: false, feature: split.feature, threshold: split.threshold, left, right };
+  }
+
+  function applyTree(tree, x){
+    let node = tree;
+    while (!node.leaf){
+      node = x[node.feature] <= node.threshold ? node.left : node.right;
+    }
+    return node;
+  }
+
+  // Train n_estimators bootstrap-sampled CART trees to separate real rows
+  // (y=1) from column-shuffled synthetic rows (y=0), matching
+  // RandomForestClassifier(min_samples_leaf=3, max_features="sqrt",
+  // bootstrap=True). Returns cluster labels (via average-linkage hierarchical
+  // clustering on leaf-co-occurrence proximity) and forest-averaged,
+  // normalized Gini feature importances (matching clf.feature_importances_).
+  function rfProximityClustering(X, k, opts){
+    opts = opts || {};
+    const nEstimators = opts.nEstimators != null ? opts.nEstimators : 500;
+    const randomState = opts.randomState != null ? opts.randomState : 42;
+    const minSamplesLeaf = opts.minSamplesLeaf != null ? opts.minSamplesLeaf : 3;
+    const rng = makeRng(randomState);
+
+    const n = X.length, d = X[0].length;
+    const maxFeatures = Math.max(1, Math.round(Math.sqrt(d)));
+    const synth = columnShuffle(X, rng);
+    const Xc = X.concat(synth);
+    const y = new Array(2*n);
+    for (let i = 0; i < n; i++){ y[i] = 1; y[n+i] = 0; }
+    const total = 2*n;
+
+    const leafPerTree = [];
+    const importanceSum = new Float64Array(d);
+
+    for (let t = 0; t < nEstimators; t++){
+      const bootIdx = new Array(total);
+      for (let i = 0; i < total; i++) bootIdx[i] = Math.floor(rng() * total);
+
+      const importanceAccum = new Float64Array(d);
+      const leafIdCounter = { next: 0 };
+      const tree = buildCARTTree(Xc, y, bootIdx, 2, maxFeatures, minSamplesLeaf, rng, importanceAccum, leafIdCounter);
+
+      let treeSum = 0;
+      for (let f = 0; f < d; f++) treeSum += importanceAccum[f];
+      if (treeSum > 0){
+        for (let f = 0; f < d; f++) importanceSum[f] += (importanceAccum[f] / treeSum);
+      }
+
+      const leaves = new Array(n);
+      for (let i = 0; i < n; i++) leaves[i] = applyTree(tree, X[i]).id;
+      leafPerTree.push(leaves);
+    }
+
+    const importances = new Float64Array(d);
+    for (let f = 0; f < d; f++) importances[f] = importanceSum[f] / nEstimators;
+
+    const prox = Array.from({length:n}, () => new Float64Array(n));
+    for (const leaves of leafPerTree){
+      for (let i = 0; i < n; i++){
+        for (let j = 0; j < n; j++){
+          if (leaves[i] === leaves[j]) prox[i][j] += 1;
+        }
+      }
+    }
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) prox[i][j] /= nEstimators;
+
+    const distance = Array.from({length:n}, () => new Float64Array(n));
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) distance[i][j] = i===j ? 0 : 1 - prox[i][j];
+
+    const labels = hierarchicalClusterAverageLinkage(distance, k);
+    return { labels, importances: Array.from(importances), proximity: prox };
+  }
+
+  // Average-linkage (UPGMA) agglomerative clustering cut at k clusters,
+  // matching scipy.cluster.hierarchy.linkage(..., method="average") +
+  // fcluster(Z, t=k, criterion="maxclust"), via the Lance-Williams update.
+  function hierarchicalClusterAverageLinkage(distance, k){
+    const n = distance.length;
+    let clusters = Array.from({length:n}, (_,i) => ({ members: [i], id: i }));
+    let D = distance.map(row => Float64Array.from(row));
+
+    while (clusters.length > k){
+      let bi = 0, bj = 1, bd = Infinity;
+      for (let i = 0; i < clusters.length; i++){
+        for (let j = i+1; j < clusters.length; j++){
+          if (D[i][j] < bd){ bd = D[i][j]; bi = i; bj = j; }
+        }
+      }
+      const ni = clusters[bi].members.length, nj = clusters[bj].members.length;
+      const newRow = new Float64Array(clusters.length);
+      for (let m = 0; m < clusters.length; m++){
+        if (m === bi || m === bj) continue;
+        newRow[m] = (ni*D[bi][m] + nj*D[bj][m]) / (ni+nj);
+      }
+
+      const merged = { members: clusters[bi].members.concat(clusters[bj].members), id: clusters[bi].id };
+      const keep = [];
+      for (let m = 0; m < clusters.length; m++) if (m !== bi && m !== bj) keep.push(m);
+
+      const newClusters = keep.map(m => clusters[m]);
+      newClusters.push(merged);
+      const newD = Array.from({length:newClusters.length}, () => new Float64Array(newClusters.length));
+      for (let a = 0; a < keep.length; a++){
+        for (let b = a+1; b < keep.length; b++){
+          newD[a][b] = newD[b][a] = D[keep[a]][keep[b]];
+        }
+      }
+      const lastIdx = newClusters.length - 1;
+      for (let a = 0; a < keep.length; a++){
+        newD[a][lastIdx] = newD[lastIdx][a] = newRow[keep[a]];
+      }
+
+      clusters = newClusters;
+      D = newD;
+    }
+
+    const labels = new Array(n);
+    clusters.forEach((c, ci) => { for (const m of c.members) labels[m] = ci + 1; });
+    return labels;
+  }
+
+  // Adjusted Rand index between two label assignments, matching
+  // sklearn.metrics.adjusted_rand_score exactly.
+  function adjustedRandScore(labelsA, labelsB){
+    const n = labelsA.length;
+    const mapA = {}, mapB = {};
+    let ai = 0, bi = 0;
+    const a2 = new Array(n), b2 = new Array(n);
+    for (let i = 0; i < n; i++){
+      if (!(labelsA[i] in mapA)) mapA[labelsA[i]] = ai++;
+      if (!(labelsB[i] in mapB)) mapB[labelsB[i]] = bi++;
+      a2[i] = mapA[labelsA[i]]; b2[i] = mapB[labelsB[i]];
+    }
+    const nA = ai, nB = bi;
+    const contingency = Array.from({length:nA}, () => new Float64Array(nB));
+    for (let i = 0; i < n; i++) contingency[a2[i]][b2[i]]++;
+
+    const comb2 = x => x*(x-1)/2;
+    let sumComb = 0;
+    const rowSum = new Float64Array(nA), colSum = new Float64Array(nB);
+    for (let i = 0; i < nA; i++){
+      for (let j = 0; j < nB; j++){
+        sumComb += comb2(contingency[i][j]);
+        rowSum[i] += contingency[i][j];
+        colSum[j] += contingency[i][j];
+      }
+    }
+    let sumRow = 0; for (let i = 0; i < nA; i++) sumRow += comb2(rowSum[i]);
+    let sumCol = 0; for (let j = 0; j < nB; j++) sumCol += comb2(colSum[j]);
+    const totalComb = comb2(n);
+    const expected = (sumRow*sumCol) / totalComb;
+    const maxIndex = (sumRow + sumCol) / 2;
+    if (maxIndex === expected) return 0;
+    return (sumComb - expected) / (maxIndex - expected);
   }
 
   function smoothMovingAvg(arr, winSamples){
@@ -2134,6 +2922,146 @@
     if (e.dataTransfer.files && e.dataTransfer.files.length) addTapFiles(e.dataTransfer.files);
   });
 
+  // ---------------- Clustering: file library (mirrors Tap Analyser's) ----------------
+  function addClusterFiles(fileArr){
+    [...fileArr].forEach(file => {
+      if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target.result;
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
+          const entry = {
+            id: uid(), name: file.name, size: file.size, audioBuffer,
+            cropStart:'', cropEnd:'', included:true,
+            _rawBuffer: arrayBuffer.slice(0)
+          };
+          clusterLibrary.push(entry);
+          sortByName(clusterLibrary);
+          persistClusterEntry(entry);
+          renderClusterRows();
+          tmpCtx.close();
+        }catch(err){
+          console.error('Could not decode', file.name, err);
+          alert(`Couldn't decode "${file.name}" as a WAV file.`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function drawClusterRowWave(canvas, entry){
+    drawWaveformOverview(canvas, entry.audioBuffer);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const dur = entry.audioBuffer.duration || 1;
+    const cs = parseFloat(entry.cropStart);
+    const ce = parseFloat(entry.cropEnd);
+    ctx.fillStyle = 'rgba(194,59,46,0.16)';
+    if (isFinite(cs) && cs > 0) ctx.fillRect(0, 0, Math.min(w, (cs/dur)*w), h);
+    if (isFinite(ce) && ce > 0){
+      const ceStart = Math.max(0, dur-ce);
+      ctx.fillRect(Math.max(0,(ceStart/dur)*w), 0, w - Math.max(0,(ceStart/dur)*w), h);
+    }
+  }
+
+  function renderClusterRows(){
+    const selectedCount = clusterLibrary.filter(e => e.included !== false).length;
+    clusterFileCount.textContent = clusterLibrary.length
+      ? `${clusterLibrary.length} loaded · ${selectedCount} selected`
+      : '0 loaded';
+    if (!clusterLibrary.length){
+      clusterRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+      return;
+    }
+    clusterRows.innerHTML = '';
+    clusterLibrary.forEach(entry => {
+      if (entry.included === undefined) entry.included = true;
+      const row = document.createElement('div');
+      row.className = 'tap-row' + (entry.included ? '' : ' excluded');
+
+      const head = document.createElement('div');
+      head.className = 'tr-head';
+
+      const includeWrap = document.createElement('label');
+      includeWrap.className = 'tr-include';
+      includeWrap.title = 'Include this recording in the clustering run';
+      const includeInput = document.createElement('input');
+      includeInput.type = 'checkbox';
+      includeInput.checked = entry.included;
+      includeInput.addEventListener('change', () => {
+        entry.included = includeInput.checked;
+        row.classList.toggle('excluded', !entry.included);
+        clusterFileCount.textContent = `${clusterLibrary.length} loaded · ${clusterLibrary.filter(e => e.included !== false).length} selected`;
+        persistClusterEntry(entry);
+      });
+      includeWrap.appendChild(includeInput);
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'tr-name';
+      nameEl.textContent = entry.name;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tr-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Remove this file';
+      removeBtn.addEventListener('click', () => {
+        clusterLibrary = clusterLibrary.filter(f => f.id !== entry.id);
+        idbDelete('clusterLibrary', entry.id);
+        renderClusterRows();
+      });
+      head.appendChild(includeWrap);
+      head.appendChild(nameEl);
+      head.appendChild(removeBtn);
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'tr-wave';
+      canvas.width = 1200; canvas.height = 70;
+
+      const fields = document.createElement('div');
+      fields.className = 'tr-fields';
+
+      const csField = document.createElement('div');
+      csField.className = 'tap-field';
+      csField.innerHTML = '<label>Crop Start (s)</label>';
+      const csInput = document.createElement('input');
+      csInput.type = 'number'; csInput.min = '0'; csInput.step = '0.1'; csInput.placeholder = '0';
+      csInput.value = entry.cropStart;
+      csInput.addEventListener('change', () => { entry.cropStart = csInput.value; drawClusterRowWave(canvas, entry); persistClusterEntry(entry); });
+      csField.appendChild(csInput);
+
+      const ceField = document.createElement('div');
+      ceField.className = 'tap-field';
+      ceField.innerHTML = '<label>Crop End (s)</label>';
+      const ceInput = document.createElement('input');
+      ceInput.type = 'number'; ceInput.min = '0'; ceInput.step = '0.1'; ceInput.placeholder = '0';
+      ceInput.value = entry.cropEnd;
+      ceInput.addEventListener('change', () => { entry.cropEnd = ceInput.value; drawClusterRowWave(canvas, entry); persistClusterEntry(entry); });
+      ceField.appendChild(ceInput);
+
+      fields.appendChild(csField);
+      fields.appendChild(ceField);
+
+      row.appendChild(head);
+      row.appendChild(canvas);
+      row.appendChild(fields);
+      clusterRows.appendChild(row);
+
+      drawClusterRowWave(canvas, entry);
+    });
+  }
+
+  fileInputCluster.addEventListener('change', (e) => addClusterFiles(e.target.files));
+  ;['dragover','dragenter'].forEach(evtName => {
+    dropzoneCluster.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneCluster.classList.add('drag'); });
+  });
+  ;['dragleave','drop'].forEach(evtName => {
+    dropzoneCluster.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneCluster.classList.remove('drag'); });
+  });
+  dropzoneCluster.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addClusterFiles(e.dataTransfer.files);
+  });
+
   async function runTapAnalysis(){
     if (tapRunning) return;
     if (!tapLibrary.length){
@@ -2226,6 +3154,8 @@
       ctx.font = '15px "JetBrains Mono", monospace';
       ctx.fillText('No frequency data to plot.', 20, h/2);
       scatterLegend.innerHTML = '';
+      scatterPoints = [];
+      scatterTooltip.classList.remove('visible');
       return;
     }
 
@@ -2264,7 +3194,10 @@
 
     const dotR = 5.5;
 
-    // Draw a filled, coloured dot marker for every frequency point.
+    // Draw a filled, coloured dot marker for every frequency point, and
+    // remember each one's canvas position + underlying data so a click on
+    // the graph can look up which point was hit.
+    scatterPoints = [];
     fileSummaries.forEach((fs, fi) => {
       const color = TAP_COLOURS[fi % TAP_COLOURS.length];
       fs.freqSummary.forEach(entry => {
@@ -2276,8 +3209,15 @@
         ctx.strokeStyle = '#fbfbf9';
         ctx.lineWidth = 1.5;
         ctx.stroke();
+        scatterPoints.push({
+          cx, cy, color, label: fs.label,
+          freq: entry.freq, avgPct: entry.avgPct, appearances: entry.appearances,
+          eventCount: fs.eventCount, stdPct: entry.stdPct,
+          minPct: entry.minPct, maxPct: entry.maxPct, stdHz: entry.stdHz
+        });
       });
     });
+    scatterTooltip.classList.remove('visible');
 
     scatterLegend.innerHTML = fileSummaries.map((fs, fi) => `
       <div class="sl-item">
@@ -2309,6 +3249,581 @@
           </table>
         </div>`;
     }).join('');
+  }
+
+  // ---------------- Clustering: run pipeline ----------------
+  // Mirrors build_dataset_unlabeled() + kmeans_cluster() + rf_proximity_clustering()
+  // from random_forest.py: detect taps per file -> FFT-feature each tap
+  // (fmax fixed at 1500 Hz, n_bins=64) -> KMeans/silhouette picks k -> RF
+  // proximity clustering (primary) at that k -> adjusted Rand index vs. KMeans.
+  const CLUSTER_N_BINS = 64, CLUSTER_FMIN = 20, CLUSTER_FMAX = 1500;
+
+  async function runClustering(){
+    const engine = el('clusterEngine').value;
+    if (engine === 'python') return runClusteringPython();
+    return runClusteringJS();
+  }
+
+  async function runClusteringJS(){
+    if (clusterRunning) return;
+    if (!clusterLibrary.length){
+      clusterStatus.textContent = 'Load at least one .wav file first.';
+      clusterStatus.classList.add('err');
+      return;
+    }
+    const activeEntries = clusterLibrary.filter(e => e.included !== false);
+    if (!activeEntries.length){
+      clusterStatus.textContent = 'Tick at least one recording to analyse.';
+      clusterStatus.classList.add('err');
+      return;
+    }
+    clusterRunning = true;
+    runClusterBtn.disabled = true;
+    clusterStatus.classList.remove('err');
+
+    const windowMs = parseInt(el('clusterWindowMs').value, 10) || 120;
+    const nEstimators = Math.max(10, parseInt(el('clusterNTrees').value, 10) || 500);
+    const minGapMs = (parseFloat(el('clusterMinGap').value) || 0.15) * 1000;
+    const forceKRaw = el('clusterForceK').value.trim();
+    const forceK = forceKRaw !== '' ? Math.max(2, parseInt(forceKRaw, 10)) : null;
+
+    const X = [], meta = [];
+    const warnings = [];
+    let srUsed = null;
+    const sampleRates = new Set();
+
+    for (let fi = 0; fi < activeEntries.length; fi++){
+      const entry = activeEntries[fi];
+      clusterStatus.textContent = `Detecting taps ${fi+1}/${activeEntries.length}: ${entry.name}…`;
+      await sleep0();
+
+      const audioBuffer = entry.audioBuffer;
+      const sr = audioBuffer.sampleRate;
+      sampleRates.add(sr);
+      const nCh = audioBuffer.numberOfChannels;
+      let samples;
+      if (nCh === 1){
+        samples = audioBuffer.getChannelData(0).slice();
+      } else {
+        const n = audioBuffer.length;
+        samples = new Float32Array(n);
+        for (let c = 0; c < nCh; c++){
+          const ch = audioBuffer.getChannelData(c);
+          for (let i = 0; i < n; i++) samples[i] += ch[i]/nCh;
+        }
+      }
+
+      const cropStartVal = (entry.cropStart||'').trim();
+      const cropEndVal = (entry.cropEnd||'').trim();
+      const cropStartSec = cropStartVal !== '' ? Math.max(0, parseFloat(cropStartVal)) : 0;
+      const cropEndSec = cropEndVal !== '' ? Math.max(0, parseFloat(cropEndVal)) : 0;
+      samples = trimSignalRF(samples, sr, isFinite(cropStartSec) ? cropStartSec : 0, isFinite(cropEndSec) ? cropEndSec : 0);
+      await sleep0();
+
+      const onsets = detectTapsRF(samples, sr, { minGapMs });
+      if (!onsets.length){
+        warnings.push(`${entry.name}: no taps detected, skipped`);
+        continue;
+      }
+      await sleep0();
+
+      const noiseSpectrum = estimateNoiseSpectrumRF(samples, sr, onsets, windowMs);
+      if (!noiseSpectrum) warnings.push(`${entry.name}: no quiet gap found, denoising skipped for this file`);
+      await sleep0();
+
+      for (let i = 0; i < onsets.length; i++){
+        const segment = extractWindowRF(samples, sr, onsets[i], windowMs);
+        const feat = fftFeaturesRF(segment, sr, { nBins: CLUSTER_N_BINS, fmin: CLUSTER_FMIN, fmax: CLUSTER_FMAX, noiseSpectrum });
+        X.push(Array.from(feat));
+        meta.push({ file: entry.name, tapIndex: i });
+        if (i % 5 === 4) await sleep0();
+      }
+      if (srUsed === null) srUsed = sr;
+    }
+
+    if (sampleRates.size > 1){
+      warnings.push(`files have different sample rates (${[...sampleRates].join(', ')}) — bin Hz ranges shown assume ${srUsed} Hz`);
+    }
+
+    if (X.length < 6){
+      clusterRunning = false;
+      runClusterBtn.disabled = false;
+      clusterStatus.textContent = `Need at least 6 detected taps total to cluster meaningfully (got ${X.length}).`;
+      clusterStatus.classList.add('err');
+      return;
+    }
+
+    clusterStatus.textContent = `Determining k (KMeans + silhouette) across ${X.length} taps…`;
+    await sleep0();
+    const kmRes = kmeansClusterAutoK(X, forceK != null ? { k: forceK } : { kRange: [2,3,4,5,6,7,8] });
+    const k = kmRes.k;
+    if (k == null){
+      clusterRunning = false;
+      runClusterBtn.disabled = false;
+      clusterStatus.textContent = 'Could not determine a cluster count — try more taps or force a k.';
+      clusterStatus.classList.add('err');
+      return;
+    }
+
+    clusterStatus.textContent = `Running Random Forest proximity clustering (k=${k}, ${nEstimators} trees)…`;
+    await sleep0();
+    const rfRes = rfProximityClustering(X, k, { nEstimators, randomState: 42 });
+    await sleep0();
+
+    const agreement = adjustedRandScore(kmRes.labels, rfRes.labels);
+
+    clusterRunning = false;
+    runClusterBtn.disabled = false;
+    clusterStatus.textContent = warnings.length
+      ? `Done — ${X.length} taps, k=${k}, agreement=${agreement.toFixed(3)}. Notes: ${warnings.join(' · ')}`
+      : `Done — ${X.length} taps across ${activeEntries.length} file(s), k=${k}, agreement (adjusted Rand vs. KMeans)=${agreement.toFixed(3)}.`;
+
+    const edges = getBinEdgesRF(srUsed, CLUSTER_N_BINS, CLUSTER_FMIN, CLUSTER_FMAX);
+    renderClusterResults({ meta, rfLabels: rfRes.labels, importances: rfRes.importances, edges, k, agreement });
+  }
+
+  // ---------------- Clustering: "real Python" engine via Pyodide ----------------
+  // Runs the *actual* functions from random_forest.py (copied verbatim below)
+  // inside the browser using a real CPython + numpy/scipy/scikit-learn build
+  // (Pyodide, compiled to WebAssembly) instead of the JS reimplementation
+  // above. This is the only way to get results that match your local Python
+  // run, since JS and Python use different underlying random-number
+  // generators for the Random Forest step — no amount of careful JS porting
+  // can reproduce numpy's exact random sequence.
+  const PYODIDE_CDN = 'https://cdn.jsdelivr.net/pyodide/v314.0.4/full/pyodide.js';
+  let pyodideInstance = null;
+  let pyodidePackagesReady = false;
+  let pyodideLoadPromise = null;
+
+  function loadPyodideScriptTag(){
+    return new Promise((resolve, reject) => {
+      if (window.loadPyodide){ resolve(); return; }
+      const existing = document.querySelector(`script[src="${PYODIDE_CDN}"]`);
+      if (existing){
+        existing.addEventListener('load', () => resolve());
+        existing.addEventListener('error', () => reject(new Error('Could not load the Pyodide script from ' + PYODIDE_CDN)));
+        return;
+      }
+      const s = document.createElement('script');
+      s.src = PYODIDE_CDN;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error('Could not load the Pyodide script from ' + PYODIDE_CDN + ' — check your internet connection.'));
+      document.head.appendChild(s);
+    });
+  }
+
+  // Verbatim (I/O and CLI-plumbing stripped) port of the algorithmic core of
+  // random_forest.py, plus a thin JSON-in/JSON-out bridge function at the
+  // bottom. Every function between the markers below is copied unmodified
+  // from the uploaded script — only load_wav_mono's file-reading and
+  // build_dataset_unlabeled's folder-globbing were replaced, since audio
+  // decoding happens in the browser (Web Audio API) rather than via
+  // scipy.io.wavfile.read.
+  const PYTHON_CLUSTERING_SOURCE = `
+import json
+import numpy as np
+from scipy.signal import find_peaks
+from scipy.cluster.hierarchy import linkage, fcluster
+from scipy.spatial.distance import squareform
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score, adjusted_rand_score
+
+# ============ verbatim from random_forest.py ============
+
+def trim_signal(signal, sr, skip_start_sec=0.0, skip_end_sec=0.0):
+    start_idx = int(sr * skip_start_sec)
+    end_idx = len(signal) - int(sr * skip_end_sec)
+    end_idx = max(start_idx, end_idx)
+    return signal[start_idx:end_idx]
+
+
+def detect_taps(signal, sr, min_gap_ms=150, energy_win_ms=10, rel_threshold=0.15, expected_taps=None):
+    win = max(1, int(sr * energy_win_ms / 1000))
+    energy = np.convolve(signal ** 2, np.ones(win) / win, mode="same")
+    min_distance = int(sr * min_gap_ms / 1000)
+    height = rel_threshold * energy.max()
+    peaks, _ = find_peaks(energy, height=height, distance=min_distance)
+
+    if expected_taps is not None and len(peaks) > expected_taps:
+        peak_energies = energy[peaks]
+        top = np.argsort(peak_energies)[::-1][:expected_taps]
+        peaks = np.sort(peaks[top])
+
+    return peaks
+
+
+def extract_window(signal, sr, onset_idx, window_ms=500, pre_ms=5):
+    pre = int(sr * pre_ms / 1000)
+    length = int(sr * window_ms / 1000)
+    start = max(0, onset_idx - pre)
+    end = start + length
+    segment = signal[start:end]
+    if len(segment) < length:
+        segment = np.pad(segment, (0, length - len(segment)))
+    return segment
+
+
+def estimate_noise_spectrum(signal, sr, onsets, window_ms=120, tail_margin_ms=300):
+    length = int(sr * window_ms / 1000)
+    margin = int(sr * tail_margin_ms / 1000)
+    segments = []
+
+    if len(onsets) > 0 and onsets[0] - length > 0:
+        segments.append(signal[0:length])
+
+    for a, b in zip(onsets[:-1], onsets[1:]):
+        start = a + margin
+        end = start + length
+        if end < b:
+            segments.append(signal[start:end])
+
+    if not segments:
+        return None
+
+    window = np.hanning(length)
+    spectra = [np.abs(np.fft.rfft(s * window)) for s in segments]
+    return np.mean(spectra, axis=0)
+
+
+def fft_features(segment, sr, n_bins=64, fmin=20, fmax=None, noise_spectrum=None):
+    if fmax is None:
+        fmax = sr / 2
+    window = np.hanning(len(segment))
+    spectrum = np.abs(np.fft.rfft(segment * window))
+
+    if noise_spectrum is not None:
+        spectrum = np.maximum(spectrum - noise_spectrum, 0)
+
+    freqs = np.fft.rfftfreq(len(segment), d=1 / sr)
+    bin_edges = np.logspace(np.log10(fmin), np.log10(fmax), n_bins + 1)
+    features = np.zeros(n_bins)
+    for i in range(n_bins):
+        mask = (freqs >= bin_edges[i]) & (freqs < bin_edges[i + 1])
+        if mask.any():
+            features[i] = spectrum[mask].mean()
+    return np.log1p(features)
+
+
+def get_bin_edges(sr, n_bins=64, fmin=20, fmax=None):
+    if fmax is None:
+        fmax = sr / 2
+    return np.logspace(np.log10(fmin), np.log10(fmax), n_bins + 1)
+
+
+def kmeans_cluster(X, k=None, k_range=range(2, 9), random_state=42):
+    Xs = StandardScaler().fit_transform(X)
+    n_samples = X.shape[0]
+
+    if k is not None:
+        labels = KMeans(n_clusters=k, n_init=10, random_state=random_state).fit_predict(Xs)
+        return labels, k, Xs
+
+    best_k, best_score, best_labels = None, -1, None
+    for k_try in k_range:
+        if k_try >= n_samples:
+            break
+        labels_try = KMeans(n_clusters=k_try, n_init=10, random_state=random_state).fit_predict(Xs)
+        score = silhouette_score(Xs, labels_try)
+        if score > best_score:
+            best_k, best_score, best_labels = k_try, score, labels_try
+
+    return best_labels, best_k, Xs
+
+
+def rf_proximity_clustering(X, k, n_estimators=500, random_state=42):
+    rng = np.random.default_rng(random_state)
+    X_synth = np.column_stack([rng.permutation(X[:, j]) for j in range(X.shape[1])])
+    X_combined = np.vstack([X, X_synth])
+    y_combined = np.array([1] * len(X) + [0] * len(X_synth))
+
+    clf = RandomForestClassifier(
+        n_estimators=n_estimators,
+        min_samples_leaf=3,
+        max_features="sqrt",
+        random_state=random_state,
+        n_jobs=-1,
+    )
+    clf.fit(X_combined, y_combined)
+
+    leaves = clf.apply(X)
+    n = X.shape[0]
+    prox = np.zeros((n, n), dtype=np.float32)
+    for t in range(leaves.shape[1]):
+        col = leaves[:, t]
+        prox += (col[:, None] == col[None, :])
+    prox /= leaves.shape[1]
+
+    distance = 1 - prox
+    np.fill_diagonal(distance, 0)
+    Z = linkage(squareform(distance, checks=False), method="average")
+    labels = fcluster(Z, t=k, criterion="maxclust")
+
+    return labels, clf.feature_importances_
+
+# ============ end verbatim ============
+
+# Thin bridge: takes JSON describing each loaded/decoded file (already mono,
+# already peak-normalized the same way load_wav_mono() does) plus the run
+# parameters, runs the exact pipeline above, and returns JSON the JS side
+# renders with the same renderClusterResults() used by the JS engine.
+def run_clustering_bridge(payload_json):
+    # Everything comes in through one JSON string (rather than separate
+    # positional arguments) so there's no ambiguity between JS's null/
+    # undefined and Python's None when crossing the pyodide FFI boundary --
+    # json.loads() maps JSON null to Python None unambiguously.
+    payload = json.loads(payload_json)
+    files_data = payload['files']
+    window_ms = payload['windowMs']
+    n_estimators = payload['nEstimators']
+    force_k = payload.get('forceK')
+    min_gap_ms = payload['minGapMs']
+    random_state = payload['randomState']
+
+    X, meta = [], []
+    sample_rates = set()
+    sr_used = None
+    warnings = []
+
+    for f in files_data:
+        name = f['name']
+        sr = f['sr']
+        sample_rates.add(sr)
+        signal = np.array(f['samples'], dtype=np.float32)
+        peak = np.max(np.abs(signal)) or 1.0
+        signal = signal / peak
+        signal = trim_signal(signal, sr, f.get('cropStart') or 0.0, f.get('cropEnd') or 0.0)
+
+        onsets = detect_taps(signal, sr, min_gap_ms=min_gap_ms)
+        if len(onsets) == 0:
+            warnings.append(f"{name}: no taps detected, skipped")
+            continue
+
+        noise_spectrum = estimate_noise_spectrum(signal, sr, onsets, window_ms=window_ms)
+        if noise_spectrum is None:
+            warnings.append(f"{name}: no quiet gap found, denoising skipped for this file")
+
+        for i, onset in enumerate(onsets):
+            segment = extract_window(signal, sr, onset, window_ms=window_ms)
+            feat = fft_features(segment, sr, n_bins=64, fmin=20, fmax=1500, noise_spectrum=noise_spectrum)
+            X.append(feat)
+            meta.append({'file': name, 'tapIndex': i})
+        if sr_used is None:
+            sr_used = sr
+
+    if len(sample_rates) > 1:
+        warnings.append(f"files have different sample rates ({sorted(sample_rates)}) -- bin Hz ranges shown assume {sr_used} Hz")
+
+    if len(X) < 6:
+        return json.dumps({'error': f'Need at least 6 detected taps total to cluster meaningfully (got {len(X)}).'})
+
+    X = np.array(X)
+    km_labels, k, Xs = kmeans_cluster(X, k=force_k)
+    if k is None:
+        return json.dumps({'error': 'Could not determine a cluster count -- try more taps or force a k.'})
+
+    rf_labels, importances = rf_proximity_clustering(X, k=k, n_estimators=n_estimators, random_state=random_state)
+    agreement = adjusted_rand_score(km_labels, rf_labels)
+    edges = get_bin_edges(sr_used, n_bins=64, fmin=20, fmax=1500)
+
+    return json.dumps({
+        'meta': meta,
+        'rfLabels': [int(x) for x in rf_labels],
+        'importances': [float(x) for x in importances],
+        'edges': [float(x) for x in edges],
+        'k': int(k),
+        'agreement': float(agreement),
+        'nTaps': len(X),
+        'nFiles': len(files_data),
+        'warnings': warnings,
+    })
+`;
+
+  async function ensurePyodideReady(onStatus){
+    if (pyodideInstance && pyodidePackagesReady) return pyodideInstance;
+    if (pyodideLoadPromise) return pyodideLoadPromise;
+
+    pyodideLoadPromise = (async () => {
+      onStatus('Loading Python runtime (Pyodide)…');
+      await loadPyodideScriptTag();
+      pyodideInstance = await window.loadPyodide();
+
+      onStatus('Loading numpy / scipy / scikit-learn (first run only, ~40MB, needs internet)…');
+      await pyodideInstance.loadPackage(['numpy', 'scipy', 'scikit-learn']);
+
+      onStatus('Preparing the clustering pipeline…');
+      await pyodideInstance.runPythonAsync(PYTHON_CLUSTERING_SOURCE);
+
+      pyodidePackagesReady = true;
+      return pyodideInstance;
+    })();
+
+    try{
+      return await pyodideLoadPromise;
+    }catch(err){
+      pyodideLoadPromise = null; // allow retrying on the next Run click
+      throw err;
+    }
+  }
+
+  async function runClusteringPython(){
+    if (clusterRunning) return;
+    if (!clusterLibrary.length){
+      clusterStatus.textContent = 'Load at least one .wav file first.';
+      clusterStatus.classList.add('err');
+      return;
+    }
+    const activeEntries = clusterLibrary.filter(e => e.included !== false);
+    if (!activeEntries.length){
+      clusterStatus.textContent = 'Tick at least one recording to analyse.';
+      clusterStatus.classList.add('err');
+      return;
+    }
+    clusterRunning = true;
+    runClusterBtn.disabled = true;
+    clusterStatus.classList.remove('err');
+
+    const windowMs = parseInt(el('clusterWindowMs').value, 10) || 120;
+    const nEstimators = Math.max(10, parseInt(el('clusterNTrees').value, 10) || 500);
+    const minGapMs = (parseFloat(el('clusterMinGap').value) || 0.15) * 1000;
+    const forceKRaw = el('clusterForceK').value.trim();
+    const forceK = forceKRaw !== '' ? Math.max(2, parseInt(forceKRaw, 10)) : null;
+
+    try{
+      const pyodide = await ensurePyodideReady((msg) => { clusterStatus.textContent = msg; });
+
+      clusterStatus.textContent = `Decoding ${activeEntries.length} file(s)…`;
+      await sleep0();
+
+      const filesData = [];
+      for (const entry of activeEntries){
+        const audioBuffer = entry.audioBuffer;
+        const sr = audioBuffer.sampleRate;
+        const nCh = audioBuffer.numberOfChannels;
+        let samples;
+        if (nCh === 1){
+          samples = audioBuffer.getChannelData(0);
+        } else {
+          const n = audioBuffer.length;
+          const mixed = new Float32Array(n);
+          for (let c = 0; c < nCh; c++){
+            const ch = audioBuffer.getChannelData(c);
+            for (let i = 0; i < n; i++) mixed[i] += ch[i]/nCh;
+          }
+          samples = mixed;
+        }
+        const cropStartVal = (entry.cropStart||'').trim();
+        const cropEndVal = (entry.cropEnd||'').trim();
+        filesData.push({
+          name: entry.name,
+          sr,
+          samples: Array.from(samples),
+          cropStart: cropStartVal !== '' ? parseFloat(cropStartVal) : 0,
+          cropEnd: cropEndVal !== '' ? parseFloat(cropEndVal) : 0,
+        });
+        await sleep0();
+      }
+
+      clusterStatus.textContent = `Running the real Python pipeline (k=${forceK != null ? forceK : 'auto'}, ${nEstimators} trees)… this can take a while.`;
+      await sleep0();
+
+      const bridge = pyodide.globals.get('run_clustering_bridge');
+      const payload = {
+        files: filesData, windowMs, nEstimators, forceK, minGapMs, randomState: 42,
+      };
+      const resultJson = bridge(JSON.stringify(payload));
+      bridge.destroy();
+      const result = JSON.parse(resultJson);
+
+      clusterRunning = false;
+      runClusterBtn.disabled = false;
+
+      if (result.error){
+        clusterStatus.textContent = result.error;
+        clusterStatus.classList.add('err');
+        return;
+      }
+
+      const warnings = result.warnings || [];
+      clusterStatus.textContent = warnings.length
+        ? `Done (Python) — ${result.nTaps} taps, k=${result.k}, agreement=${result.agreement.toFixed(3)}. Notes: ${warnings.join(' · ')}`
+        : `Done (Python) — ${result.nTaps} taps across ${result.nFiles} file(s), k=${result.k}, agreement (adjusted Rand vs. KMeans)=${result.agreement.toFixed(3)}.`;
+
+      renderClusterResults({
+        meta: result.meta, rfLabels: result.rfLabels, importances: result.importances,
+        edges: result.edges, k: result.k, agreement: result.agreement,
+      });
+    }catch(err){
+      console.error('Pyodide clustering failed', err);
+      clusterRunning = false;
+      runClusterBtn.disabled = false;
+      clusterStatus.textContent = `Python engine failed: ${err.message || err}. Check your internet connection, or switch back to the JavaScript engine above.`;
+      clusterStatus.classList.add('err');
+    }
+  }
+
+  runClusterBtn.addEventListener('click', runClustering);
+
+  function renderClusterResults(res){
+    const { meta, rfLabels, importances, edges, k, agreement } = res;
+
+    // --- Table 1: RF-proximity cluster sizes ---
+    const sizeCounts = {};
+    rfLabels.forEach(c => { sizeCounts[c] = (sizeCounts[c]||0) + 1; });
+    const sizeClusters = Object.keys(sizeCounts).map(Number).sort((a,b) => a-b);
+    const sizeRows = sizeClusters.map(c => `
+      <tr><td>Cluster ${c}</td><td>${sizeCounts[c]} taps</td></tr>`).join('');
+
+    // --- Table 2: Per-file cluster breakdown (RF-proximity) ---
+    const files = [...new Set(meta.map(m => m.file))].sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+    const fileRows = files.map(fname => {
+      const idxs = meta.map((m,i) => m.file === fname ? i : -1).filter(i => i >= 0);
+      const counts = {};
+      idxs.forEach(i => { const c = rfLabels[i]; counts[c] = (counts[c]||0) + 1; });
+      const breakdown = Object.keys(counts).map(Number).sort((a,b) => a-b)
+        .map(c => `cluster ${c}: ${counts[c]}`).join(' · ');
+      return `<tr><td>${fname}</td><td>${idxs.length}</td><td>${breakdown}</td></tr>`;
+    }).join('');
+
+    // --- Table 3: Top 10 frequency bins the Random Forest found most informative ---
+    const topBins = importances.map((v,i) => ({i, v}))
+      .sort((a,b) => b.v - a.v)
+      .slice(0, 10);
+    const binRows = topBins.map(({i,v}) => `
+      <tr><td class="freq">Bin ${i}</td><td>${edges[i].toFixed(1)}–${edges[i+1].toFixed(1)} Hz</td><td>${v.toFixed(4)}</td></tr>`).join('');
+
+    let agreementNote;
+    if (agreement > 0.5) agreementNote = 'Two independent methods largely agree — reasonable confidence the groups are real.';
+    else if (agreement > 0.2) agreementNote = 'Partial agreement — treat the grouping as a rough starting point, not a firm answer.';
+    else agreementNote = 'Low agreement — these clusters are not stable; try more taps, a different window, or listen to samples from each cluster before trusting the grouping.';
+
+    clusterResultsBody.innerHTML = `
+      <div class="variance-block">
+        <div class="vb-title">Chosen k = ${k} · Agreement vs. KMeans (adjusted Rand index) = ${agreement.toFixed(3)}</div>
+        <div class="empty-note" style="margin-bottom:14px;">${agreementNote}</div>
+      </div>
+      <div class="variance-block">
+        <div class="vb-title">RF-proximity cluster sizes</div>
+        <table class="variance">
+          <thead><tr><th>Cluster</th><th>Size</th></tr></thead>
+          <tbody>${sizeRows || '<tr><td colspan="2" style="color:var(--text-faint);">No clusters.</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div class="variance-block">
+        <div class="vb-title">Per-file cluster breakdown (RF-proximity)</div>
+        <table class="variance">
+          <thead><tr><th>File</th><th>Taps</th><th>Cluster breakdown</th></tr></thead>
+          <tbody>${fileRows || '<tr><td colspan="3" style="color:var(--text-faint);">No files.</td></tr>'}</tbody>
+        </table>
+      </div>
+      <div class="variance-block">
+        <div class="vb-title">Top 10 frequency bins the Random Forest found most informative (fmax 1500 Hz)</div>
+        <table class="variance">
+          <thead><tr><th>Bin</th><th>Range</th><th>Importance</th></tr></thead>
+          <tbody>${binRows || '<tr><td colspan="3" style="color:var(--text-faint);">No importances.</td></tr>'}</tbody>
+        </table>
+      </div>`;
   }
 
   document.querySelectorAll('.home-card').forEach(card => {
@@ -3050,6 +4565,104 @@
   makeResizable(el('resizeAnalyze'), 200, 640);
   makeResizable(el('resizeCompare'), 260, 720);
   makeResizable(el('resizeTap'), 200, 640);
+  makeResizable(el('resizeCluster'), 300, 760);
+
+  // ---------------- Scatter graph: click a dot to see its data ----------------
+  function getScatterCanvasPos(clientX, clientY){
+    const rect = scatterCanvas.getBoundingClientRect();
+    const scaleX = scatterCanvas.width / rect.width;
+    const scaleY = scatterCanvas.height / rect.height;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  function findScatterPointAt(clientX, clientY){
+    const { x, y } = getScatterCanvasPos(clientX, clientY);
+    const hitR = 10; // a little bigger than the dot itself, forgiving to click
+    let best = null, bestDist = Infinity;
+    for (const pt of scatterPoints){
+      const d = Math.hypot(pt.cx - x, pt.cy - y);
+      if (d <= hitR && d < bestDist){ best = pt; bestDist = d; }
+    }
+    return best;
+  }
+
+  // Two or more points can sit close enough together that their dots
+  // visually touch or overlap — a single click there is ambiguous about
+  // which one the user meant. So: find the closest point to the click, then
+  // gather every other point clustered right on top of *that* one (not just
+  // whatever else happens to be near the click itself) and return them all,
+  // closest first, so the tooltip can list every dataset under the cursor.
+  function findScatterClusterAt(clientX, clientY){
+    const anchor = findScatterPointAt(clientX, clientY);
+    if (!anchor) return [];
+    const clusterR = 13; // a little larger than two touching dot radii (5.5px each)
+    return scatterPoints
+      .map(pt => ({ pt, d: Math.hypot(pt.cx - anchor.cx, pt.cy - anchor.cy) }))
+      .filter(o => o.d <= clusterR)
+      .sort((a,b) => a.d - b.d)
+      .map(o => o.pt);
+  }
+
+  function scatterStatBlock(pt){
+    return `
+      <div class="tt-entry">
+        <div class="tt-title"><span class="tt-swatch" style="background:${pt.color};"></span>${pt.label}</div>
+        <div class="tt-grid">
+          <div class="tt-stat"><b>${pt.freq.toFixed(1)} Hz</b><span>Frequency</span></div>
+          <div class="tt-stat"><b>${pt.avgPct.toFixed(1)}%</b><span>Avg level</span></div>
+          <div class="tt-stat"><b>${pt.appearances}/${pt.eventCount}</b><span>Appears in</span></div>
+          <div class="tt-stat"><b>${pt.minPct.toFixed(1)}–${pt.maxPct.toFixed(1)}%</b><span>Range</span></div>
+          <div class="tt-stat"><b>±${pt.stdPct.toFixed(2)}%</b><span>Std (energy)</span></div>
+          <div class="tt-stat"><b>±${pt.stdHz.toFixed(3)} Hz</b><span>Drift</span></div>
+        </div>
+      </div>`;
+  }
+
+  function showScatterTooltip(pts){
+    const multi = pts.length > 1;
+    scatterTooltip.classList.toggle('multi', multi);
+    scatterTooltip.innerHTML =
+      (multi ? `<div class="tt-multi-note">${pts.length} overlapping points — closest first</div>` : '') +
+      pts.map(scatterStatBlock).join('');
+    scatterTooltip.classList.add('visible');
+
+    // Position the tooltip right beside the (closest) dot that was clicked,
+    // in the canvas's on-screen CSS pixel space, not its internal
+    // drawing-buffer space — flipping to the other side / clamping so it
+    // never spills outside the bordered "screen" box the canvas sits in.
+    const pt = pts[0];
+    const rect = scatterCanvas.getBoundingClientRect();
+    const scaleX = scatterCanvas.width / rect.width;
+    const scaleY = scatterCanvas.height / rect.height;
+    const cssX = pt.cx / scaleX;
+    const cssY = pt.cy / scaleY;
+
+    const container = scatterCanvas.parentElement;
+    const containerW = container.clientWidth;
+    const containerH = container.clientHeight;
+    const tw = scatterTooltip.offsetWidth;
+    const th = scatterTooltip.offsetHeight;
+
+    let left = scatterCanvas.offsetLeft + cssX + 14;
+    if (left + tw > containerW - 4) left = scatterCanvas.offsetLeft + cssX - tw - 14;
+    left = Math.max(4, left);
+
+    let top = scatterCanvas.offsetTop + cssY - th / 2;
+    top = Math.max(4, Math.min(top, containerH - th - 4));
+
+    scatterTooltip.style.left = left + 'px';
+    scatterTooltip.style.top = top + 'px';
+  }
+
+  scatterCanvas.addEventListener('click', (e) => {
+    const pts = findScatterClusterAt(e.clientX, e.clientY);
+    if (pts.length) showScatterTooltip(pts);
+    else scatterTooltip.classList.remove('visible');
+  });
+  scatterCanvas.addEventListener('mousemove', (e) => {
+    const pt = findScatterPointAt(e.clientX, e.clientY);
+    scatterCanvas.style.cursor = pt ? 'pointer' : 'default';
+  });
 
   // ---------------- Restore saved libraries ----------------
   async function restoreLibraries(){
@@ -3057,7 +4670,7 @@
     // for the Tap Analyser, each recording's skip-start/skip-end values and
     // whether it was ticked for inclusion — so nothing has to be re-loaded.
     try{
-      const [libRecords, tapRecords] = await Promise.all([idbGetAll('library'), idbGetAll('tapLibrary')]);
+      const [libRecords, tapRecords, clusterRecords] = await Promise.all([idbGetAll('library'), idbGetAll('tapLibrary'), idbGetAll('clusterLibrary')]);
 
       for (const rec of libRecords){
         try{
@@ -3098,6 +4711,26 @@
         sortByName(tapLibrary);
         renderTapRows();
       }
+
+      for (const rec of clusterRecords){
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
+          clusterLibrary.push({
+            id: rec.id, name: rec.name, size: rec.size, audioBuffer,
+            cropStart: rec.cropStart || '', cropEnd: rec.cropEnd || '',
+            included: rec.included !== false,
+            _rawBuffer: rec.arrayBuffer
+          });
+          tmpCtx.close();
+        }catch(err){
+          console.warn('Could not restore', rec.name, err);
+        }
+      }
+      if (clusterLibrary.length){
+        sortByName(clusterLibrary);
+        renderClusterRows();
+      }
     }catch(err){
       console.warn('Could not restore saved libraries', err);
     }
@@ -3110,6 +4743,7 @@
   resetPreview();
   updateFreqRangeLabels();
   renderTapRows();
+  renderClusterRows();
   restoreLibraries();
 })();
 </script>
