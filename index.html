@@ -748,7 +748,18 @@
           </div>
         </details>
 
-        <button class="run-btn" id="runTapBtn">Run Analysis</button>
+        <div class="settings-section">
+          <div class="tap-field">
+            <label>Peak metric</label>
+            <select id="tapMetric" class="smoothing-select" style="width:100%;">
+              <option value="magnitude" selected>Magnitude</option>
+              <option value="energy">Energy</option>
+            </select>
+          </div>
+          <div class="engine-note" id="tapMetricNote">Peaks are found and normalised by linear FFT magnitude — the original behaviour.</div>
+        </div>
+
+        <button class="run-btn" id="runTapBtn" style="margin-top:18px;">Run Analysis</button>
         <div class="tap-status" id="tapStatus"></div>
       </div>
     </div>
@@ -827,8 +838,8 @@
           <div class="tap-field">
             <label>Compute engine</label>
             <select id="clusterEngine" class="smoothing-select" style="width:100%;">
-              <option value="js" selected>JavaScript (built-in, instant, offline)</option>
-              <option value="python">Python via Pyodide (exact match to your script)</option>
+              <option value="js" selected>JavaScript</option>
+              <option value="python">Python via Pyodide</option>
             </select>
           </div>
           <div class="engine-note" id="clusterEngineNote">Runs the port of the algorithm in your browser — instant results, no internet needed.</div>
@@ -941,6 +952,15 @@
   const tapResultsBody = el('tapResultsBody');
   const tapTopNSelect = el('tapTopNSelect');
   const tapFreqRangeLabel = el('tapFreqRangeLabel');
+  const tapMetricSelect = el('tapMetric');
+  const tapMetricNote = el('tapMetricNote');
+  const TAP_METRIC_NOTES = {
+    magnitude: 'Peaks are found and normalised by linear FFT magnitude — the original behaviour.',
+    energy: 'Peaks are ranked by normalised energy (energy ÷ −3dB bandwidth) — rewards sharp, well-defined resonances over broad, diffuse ones of equal energy (multi_energy.py).',
+  };
+  tapMetricSelect.addEventListener('change', () => {
+    tapMetricNote.textContent = TAP_METRIC_NOTES[tapMetricSelect.value] || '';
+  });
   let tapLibrary = [];      // {id, name, size, audioBuffer, skipStart:'', skipEnd:'', included, _rawBuffer}
   let tapRunning = false;
   let lastTapFileSummaries = null; // cached results, so "Show top" can re-slice without re-running analysis
@@ -2062,8 +2082,55 @@
     return freqs[binIdx] + p*binSpacing;
   }
 
-  // Top-N local-maxima peaks by linear magnitude within [minFreq,maxFreq].
-  function findTopNPeaksLinear(freqs, mags, nPeaks, minFreq, maxFreq, minSepBins){
+  // −3dB (half-power) bandwidth of a peak in Hz: walks outward from `peakIdx`
+  // on the full (unmasked) energy spectrum in both directions until energy
+  // drops below 50% of the peak's energy, interpolating each crossing for
+  // sub-bin accuracy. Ports measure_peak_bandwidth from multi_energy.py
+  // exactly (same walk direction, same interpolation, same 0.5Hz floor).
+  function measurePeakBandwidthHz(energy, freqs, peakIdx, minBwHz){
+    minBwHz = minBwHz == null ? 0.5 : minBwHz;
+    const peakEnergy = energy[peakIdx];
+    const halfPower = peakEnergy * 0.5;
+    const n = energy.length;
+    const binSpacing = freqs[1]-freqs[0];
+
+    let left = peakIdx;
+    while (left > 0 && energy[left] >= halfPower) left--;
+    let fLeft;
+    if (left > 0 && energy[left+1] > energy[left]){
+      const fracL = (halfPower - energy[left]) / (energy[left+1] - energy[left]);
+      fLeft = freqs[left] + fracL*binSpacing;
+    } else {
+      fLeft = freqs[left];
+    }
+
+    let right = peakIdx;
+    while (right < n-1 && energy[right] >= halfPower) right++;
+    let fRight;
+    if (right < n-1 && energy[right-1] > energy[right]){
+      const fracR = (halfPower - energy[right]) / (energy[right-1] - energy[right]);
+      fRight = freqs[right] - fracR*binSpacing;
+    } else {
+      fRight = freqs[right];
+    }
+
+    return Math.max(fRight - fLeft, minBwHz);
+  }
+
+  // Top-N local-maxima peaks within [minFreq,maxFreq]. Local maxima are found
+  // and de-duplicated (min separation `minSepBins`) using `rankBy` (defaults
+  // to `mags` — plain magnitude), matching scipy's find_peaks(..., distance=3)
+  // on that same curve. Which of the surviving candidates are finally kept
+  // (top `nPeaks`) and in what order is decided by `selectByFn(idx)` (defaults
+  // to `rankBy[idx]`) — this split matters for multi_energy.py's current
+  // algorithm, where peaks are FOUND on the energy curve but SELECTED/ranked
+  // by normalised energy (energy / −3dB bandwidth), so the two curves differ.
+  // Frequency is always refined from `mags` in dB, matching
+  // interpolate_peak_frequency(freqs, magnitude, ...) being called with
+  // `magnitude` regardless of mode.
+  function findTopNPeaksLinear(freqs, mags, nPeaks, minFreq, maxFreq, minSepBins, rankBy, selectByFn){
+    rankBy = rankBy || mags;
+    const selectVal = selectByFn || (idx => rankBy[idx]);
     let loIdx = -1, hiIdx = -1;
     for (let k = 0; k < freqs.length; k++){
       if (loIdx < 0 && freqs[k] >= minFreq) loIdx = k;
@@ -2073,36 +2140,53 @@
 
     const localMaxima = [];
     for (let k = loIdx+1; k < hiIdx; k++){
-      if (mags[k] > mags[k-1] && mags[k] >= mags[k+1]) localMaxima.push(k);
+      if (rankBy[k] > rankBy[k-1] && rankBy[k] >= rankBy[k+1]) localMaxima.push(k);
     }
 
     let candidates;
     if (!localMaxima.length){
       const idxs = [];
       for (let k = loIdx; k <= hiIdx; k++) idxs.push(k);
-      idxs.sort((a,b) => mags[b]-mags[a]);
+      idxs.sort((a,b) => rankBy[b]-rankBy[a]);
       candidates = idxs.slice(0, nPeaks);
     } else {
-      const sorted = localMaxima.slice().sort((a,b) => mags[b]-mags[a]);
+      const sorted = localMaxima.slice().sort((a,b) => rankBy[b]-rankBy[a]);
       const kept = [];
       for (const idx of sorted){
         if (kept.every(k => Math.abs(k-idx) >= minSepBins)) kept.push(idx);
       }
       candidates = kept;
     }
-    candidates = candidates.slice().sort((a,b) => mags[b]-mags[a]).slice(0, nPeaks);
-    const results = candidates.map(idx => ({ freq: interpolatePeakFreq(freqs, mags, idx), mag: mags[idx] }));
-    results.sort((a,b) => b.mag-a.mag);
+
+    // Truncate to the final top-N (and decide their order) by `selectVal`,
+    // not `rankBy` — for the energy-mode case this is where a peak found on
+    // the raw energy curve can lose out to a sharper/narrower one once
+    // bandwidth-normalised, exactly as in find_top_n_peaks_linear.
+    const scoreMap = new Map(candidates.map(idx => [idx, selectVal(idx)]));
+    candidates = candidates.slice().sort((a,b) => scoreMap.get(b)-scoreMap.get(a)).slice(0, nPeaks);
+    const results = candidates.map(idx => ({ freq: interpolatePeakFreq(freqs, mags, idx), mag: mags[idx], score: scoreMap.get(idx) }));
+    results.sort((a,b) => b.score-a.score);
     return results;
   }
 
-  // Normalise: top `topNBasis` peaks sum to 100%, every reported peak expressed as % of that sum.
-  function computeTopPeaksPct(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins){
-    const topLinear = findTopNPeaksLinear(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins);
+  // Normalise: top `topNBasis` peaks sum to 100%, every reported peak
+  // expressed as % of that sum. useEnergy=true mirrors multi_energy.py's
+  // current algorithm: peaks are found on the energy curve but selected and
+  // ranked by NORMALISED ENERGY = energy / −3dB bandwidth_Hz (rewards sharp,
+  // well-defined resonances over broad/diffuse ones of equal total energy),
+  // and the 100% basis is the sum of those peaks' normalised energies.
+  function computeTopPeaksPct(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins, useEnergy){
+    let rankBy = null, selectByFn = null;
+    if (useEnergy){
+      const energy = mags.map(m => m*m);
+      rankBy = energy;
+      selectByFn = idx => energy[idx] / measurePeakBandwidthHz(energy, freqs, idx);
+    }
+    const topLinear = findTopNPeaksLinear(freqs, mags, topNBasis, minFreq, maxFreq, minSepBins, rankBy, selectByFn);
     if (!topLinear.length) throw new Error('no spectral peaks found to normalise against');
-    const basisSum = topLinear.reduce((s,p) => s+p.mag, 0);
-    if (basisSum <= 0) throw new Error('top peak magnitudes summed to zero');
-    const pct = topLinear.map(p => ({ freq: p.freq, pct: (p.mag/basisSum)*100 }));
+    const basisSum = topLinear.reduce((s,p) => s+p.score, 0);
+    if (basisSum <= 0) throw new Error(useEnergy ? 'top peak normalised energies summed to zero' : 'top peak magnitudes summed to zero');
+    const pct = topLinear.map(p => ({ freq: p.freq, pct: (p.score/basisSum)*100 }));
     pct.sort((a,b) => b.pct-a.pct);
     return pct;
   }
@@ -2196,7 +2280,7 @@
       const minSepBins = 3; // matches scipy's find_peaks(mm, distance=3) directly, same bin grid as Python now
 
       let topPeaksPct;
-      try { topPeaksPct = computeTopPeaksPct(freqs, mags, opts.topNBasis, opts.minFreq, opts.maxFreq, minSepBins); }
+      try { topPeaksPct = computeTopPeaksPct(freqs, mags, opts.topNBasis, opts.minFreq, opts.maxFreq, minSepBins, opts.useEnergy); }
       catch(e){ continue; }
 
       eventResults.push({ eventNum: i+1, peaks: topPeaksPct.slice(0, 10) });
@@ -3086,6 +3170,7 @@
       maxFreq:    parseFloat(el('advMaxFreq').value) || 1000,
       topNBasis:  parseInt(el('advTopNBasis').value, 10) || 10,
       tolerance:  parseFloat(el('advTolerance').value) || 2,
+      useEnergy:  el('tapMetric').value === 'energy',
     };
 
     const fileSummaries = [];
@@ -3775,15 +3860,18 @@ def run_clustering_bridge(payload_json):
     const sizeRows = sizeClusters.map(c => `
       <tr><td>Cluster ${c}</td><td>${sizeCounts[c]} taps</td></tr>`).join('');
 
-    // --- Table 2: Per-file cluster breakdown (RF-proximity) ---
+    // --- Table 2: Per-file cluster breakdown (RF-proximity), as a file x
+    // cluster matrix — one column per cluster, blank cells where the count
+    // is 0, plus a Total column so the per-file tap count is still visible.
     const files = [...new Set(meta.map(m => m.file))].sort((a,b) => a.localeCompare(b, undefined, {numeric:true, sensitivity:'base'}));
+    const matrixClusters = sizeClusters; // reuse the same sorted cluster-id list as Table 1
+    const matrixHeaderCells = matrixClusters.map(c => `<th style="text-align:center;">${c}</th>`).join('') + `<th style="text-align:center;">Total</th>`;
     const fileRows = files.map(fname => {
       const idxs = meta.map((m,i) => m.file === fname ? i : -1).filter(i => i >= 0);
       const counts = {};
       idxs.forEach(i => { const c = rfLabels[i]; counts[c] = (counts[c]||0) + 1; });
-      const breakdown = Object.keys(counts).map(Number).sort((a,b) => a-b)
-        .map(c => `cluster ${c}: ${counts[c]}`).join(' · ');
-      return `<tr><td>${fname}</td><td>${idxs.length}</td><td>${breakdown}</td></tr>`;
+      const cells = matrixClusters.map(c => `<td style="text-align:center;">${counts[c] || ''}</td>`).join('');
+      return `<tr><td>${fname}</td>${cells}<td style="text-align:center;font-weight:600;">${idxs.length}</td></tr>`;
     }).join('');
 
     // --- Table 3: Top 10 frequency bins the Random Forest found most informative ---
@@ -3813,8 +3901,8 @@ def run_clustering_bridge(payload_json):
       <div class="variance-block">
         <div class="vb-title">Per-file cluster breakdown (RF-proximity)</div>
         <table class="variance">
-          <thead><tr><th>File</th><th>Taps</th><th>Cluster breakdown</th></tr></thead>
-          <tbody>${fileRows || '<tr><td colspan="3" style="color:var(--text-faint);">No files.</td></tr>'}</tbody>
+          <thead><tr><th>File</th>${matrixHeaderCells}</tr></thead>
+          <tbody>${fileRows || `<tr><td colspan="${matrixClusters.length+2}" style="color:var(--text-faint);">No files.</td></tr>`}</tbody>
         </table>
       </div>
       <div class="variance-block">
