@@ -350,8 +350,7 @@
 
   /* ---------- Home ---------- */
   .home-intro{color:var(--text-dim);font-size:15px;line-height:1.7;max-width:640px;margin:0 0 26px;}
-  .home-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;}
-  @media (max-width:1080px){.home-cards{grid-template-columns:1fr 1fr;}}
+  .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
   @media (max-width:760px){.home-cards{grid-template-columns:1fr;}}
   .home-card{
     text-align:left;cursor:pointer;background:var(--panel);
@@ -410,6 +409,19 @@
     display:flex;align-items:center;justify-content:center;
   }
   .tap-row .tr-remove:hover{border-color:var(--danger);color:var(--danger);}
+  .tr-rename{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tr-rename:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
+  .tr-name-input{
+    flex:1 1 auto;min-width:0;font-family:inherit;font-size:13px;
+    padding:4px 6px;border:1px solid var(--phosphor-dim);border-radius:var(--radius);
+    background:#ffffff;color:var(--text);
+  }
+  #folderRows .tr-name{cursor:pointer;}
+  #folderRows .tr-name:hover{color:var(--phosphor);}
   canvas.tr-wave{width:100%;height:70px;display:block;border-radius:var(--radius);margin-bottom:10px;}
   .tap-row .tr-fields{display:flex;gap:10px;flex-wrap:wrap;}
   .tap-field{display:flex;flex-direction:column;gap:4px;}
@@ -446,7 +458,13 @@
   canvas#scatterCanvas{width:100%;height:440px;display:block;cursor:default;}
 
   .scatter-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:14px;}
-  .scatter-legend .sl-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);}
+  .scatter-legend .sl-item{
+    display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-dim);
+    cursor:pointer;user-select:none;transition:opacity .15s,color .15s;
+  }
+  .scatter-legend .sl-item:hover{color:var(--text);}
+  .scatter-legend .sl-item.hidden{opacity:0.4;}
+  .scatter-legend .sl-item.hidden:hover{opacity:0.65;}
   .scatter-legend .sl-swatch{width:11px;height:11px;border-radius:2px;flex-shrink:0;}
 
   .scatter-tooltip{
@@ -493,6 +511,54 @@
   ::-webkit-scrollbar{width:8px;height:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+  /* ---------- "Load from local folder" button ---------- */
+  .folder-load-btn{
+    display:block;width:100%;margin:-6px 0 16px;
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;
+    padding:9px 14px;border-radius:var(--radius);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  .folder-load-btn:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
+
+  /* ---------- Folder picker modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:50;
+    background:rgba(10,10,8,0.45);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .modal-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    max-width:560px;width:100%;max-height:82vh;display:flex;flex-direction:column;
+    box-shadow:0 12px 40px rgba(0,0,0,0.25);
+  }
+  .modal-header{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:18px 20px;border-bottom:1px solid var(--line);
+  }
+  .modal-header h3{margin:0;font-size:15px;letter-spacing:0.06em;text-transform:uppercase;color:var(--text);}
+  .modal-close{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .modal-close:hover{border-color:var(--danger);color:var(--danger);}
+  .modal-body{padding:6px 20px;overflow-y:auto;flex:1;}
+  .modal-footer{
+    display:flex;justify-content:flex-end;gap:10px;
+    padding:14px 20px;border-top:1px solid var(--line);
+  }
+  .folder-pick-row{
+    display:flex;align-items:center;gap:12px;
+    padding:10px 2px;border-bottom:1px solid var(--line-soft);cursor:pointer;
+  }
+  .folder-pick-row:last-child{border-bottom:none;}
+  .folder-pick-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--phosphor);cursor:pointer;flex-shrink:0;}
+  .folder-pick-row .fp-info{flex:1;min-width:0;}
+  .folder-pick-row .fp-name{color:var(--text);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .folder-pick-row .fp-meta{color:var(--text-faint);font-size:11.5px;margin-top:2px;}
 </style>
 </head>
 <body>
@@ -512,6 +578,7 @@
     <button class="tab-btn" data-page="compare">Compare</button>
     <button class="tab-btn" data-page="tap">Tap Analyser</button>
     <button class="tab-btn" data-page="cluster">Clustering</button>
+    <button class="tab-btn" data-page="folder">File Folder</button>
   </div>
 
   <!-- ============ PAGE: HOME ============ -->
@@ -536,6 +603,12 @@
         <div class="hc-desc">Detects taps across your .wav files, FFTs each one, then groups them with an unsupervised Random Forest (real vs. shuffled-column proximity clustering, cross-checked against KMeans). Reports cluster sizes, per-file breakdown, and the most informative frequency bins.</div>
         <div class="hc-go">Open &rarr;</div>
       </div>
+      <div class="home-card" data-goto="folder">
+        <div class="hc-icon">&#128193;</div>
+        <div class="hc-title">File Folder</div>
+        <div class="hc-desc">Upload .wav files once and save a Skip Start / Skip End for each — then, in any tool above, choose "load from local folder" instead of re-uploading from your computer every time.</div>
+        <div class="hc-go">Open &rarr;</div>
+      </div>
     </div>
   </div>
 
@@ -549,9 +622,10 @@
         <div class="panel-label"><span>Library</span><span class="count" id="fileCount">0 loaded</span></div>
         <label class="dropzone" id="dropzone">
           <span class="big">+</span>
-          Load .wav file(s)
+          Load .wav file(s) from your computer
           <input type="file" id="fileInput" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
+        <button class="folder-load-btn" type="button" id="loadFromFolderBtnAnalyze">Load from local folder</button>
         <div class="file-list" id="fileList">
           <div class="empty-note">No files yet. Drop or select .wav files above — they're saved locally, so they'll still be here next time.</div>
         </div>
@@ -648,9 +722,10 @@
         <div class="panel-label"><span>Library</span><span class="count" id="compareFileCount">0 loaded</span></div>
         <label class="dropzone" id="dropzoneCompare">
           <span class="big">+</span>
-          Load .wav file(s)
+          Load .wav file(s) from your computer
           <input type="file" id="fileInputCompare" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
+        <button class="folder-load-btn" type="button" id="loadFromFolderBtnCompare">Load from local folder</button>
         <div class="empty-note" style="margin-bottom:10px;">Pick a moment in each file below, then add it to the comparison graph. Add the same file more than once to compare two moments from it.</div>
         <div class="compare-rows" id="compareRows">
           <div class="empty-note">No files yet.</div>
@@ -728,9 +803,10 @@
         <div class="panel-label"><span>Library</span><span class="count" id="tapFileCount">0 loaded</span></div>
         <label class="dropzone" id="dropzoneTap">
           <span class="big">+</span>
-          Load .wav file(s)
+          Load .wav file(s) from your computer
           <input type="file" id="fileInputTap" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
+        <button class="folder-load-btn" type="button" id="loadFromFolderBtnTap">Load from local folder</button>
         <div class="empty-note" style="margin-bottom:10px;">Leave Skip Start blank to auto-detect the end of any leading speech. Skip End trims everything after that many seconds (use it to cut trailing noise).</div>
         <div class="tap-rows" id="tapRows">
           <div class="empty-note">No files yet.</div>
@@ -816,9 +892,10 @@
         <div class="panel-label"><span>Library</span><span class="count" id="clusterFileCount">0 loaded</span></div>
         <label class="dropzone" id="dropzoneCluster">
           <span class="big">+</span>
-          Load .wav file(s)
+          Load .wav file(s) from your computer
           <input type="file" id="fileInputCluster" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
+        <button class="folder-load-btn" type="button" id="loadFromFolderBtnCluster">Load from local folder</button>
         <div class="empty-note" style="margin-bottom:14px;">Crop Start / Crop End trim a fixed amount off the beginning/end of each file before tap detection (e.g. setup noise or trailing silence). Leave blank for no crop.</div>
         <div class="tap-rows" id="clusterRows">
           <div class="empty-note">No files yet.</div>
@@ -831,7 +908,10 @@
             <div class="tap-field"><label>Trees (RF estimators)</label><input type="number" id="clusterNTrees" value="500" min="10" step="10"></div>
             <div class="tap-field"><label>Force k (blank = auto)</label><input type="number" id="clusterForceK" placeholder="auto" min="2" step="1"></div>
             <div class="tap-field"><label>Min gap (s)</label><input type="number" id="clusterMinGap" value="0.15" min="0.01" step="0.05"></div>
+            <div class="tap-field"><label>Offset (s)</label><input type="number" id="clusterOffset" value="0.005" min="0" step="0.001" title="Seconds of audio to include before each detected tap's onset when taking the FFT window."></div>
+            <div class="tap-field"><label>Fmax (Hz)</label><input type="number" id="clusterFmax" value="1500" min="50" step="50" title="Highest frequency included in the FFT features and frequency-bin table."></div>
           </div>
+          <button class="text-btn" type="button" id="clusterResetOffsetFmax" style="margin-top:2px;">Reset offset &amp; fmax to defaults</button>
         </details>
 
         <div class="settings-section">
@@ -855,9 +935,9 @@
     <!-- RIGHT: RESULTS -->
     <div>
       <div class="panel" id="clusterResultsPanel">
-        <div class="panel-label"><span>Clustering Results <span class="freq-range-label" style="color:var(--text-faint);">(RF-proximity clustering, FFT features up to 1500 Hz)</span></span></div>
+        <div class="panel-label"><span>Clustering Results <span class="freq-range-label" id="clusterFreqRangeLabel" style="color:var(--text-faint);">(RF-proximity clustering, FFT features up to your chosen Fmax)</span></span></div>
         <div id="clusterResultsBody">
-          <div class="placeholder">Load .wav files on the left and press Run Clustering — taps are detected in every ticked recording, FFT'd into log-spaced frequency-bin features (fmax 1500 Hz), then grouped by an unsupervised Random Forest. Cluster sizes, per-file breakdown, and the most informative frequency bins will be listed here.</div>
+          <div class="placeholder">Load .wav files on the left and press Run Clustering — taps are detected in every ticked recording, FFT'd into log-spaced frequency-bin features (up to your chosen Fmax), then grouped by an unsupervised Random Forest. Cluster sizes, per-file breakdown, and the most informative frequency bins will be listed here.</div>
         </div>
       </div>
     </div>
@@ -865,8 +945,24 @@
   </div>
   </div>
 
+  <!-- ============ PAGE: FILE FOLDER ============ -->
+  <div class="page" id="page-folder">
+    <div class="panel">
+      <div class="panel-label"><span>Local File Folder</span><span class="count" id="folderFileCount">0 saved</span></div>
+      <label class="dropzone" id="dropzoneFolder">
+        <span class="big">+</span>
+        Add .wav file(s) to your local folder
+        <input type="file" id="fileInputFolder" accept=".wav,audio/wav,audio/x-wav" multiple>
+      </label>
+      <div class="empty-note" style="margin-bottom:10px;">Files added here are saved in your browser (IndexedDB) and stay available across Waveform Lab, Compare, Tap Analyser and Clustering. Set Skip Start / Skip End once and they'll carry over wherever you load a file from this folder — look for the "Load from local folder" button next to each tool's uploader.</div>
+      <div class="tap-rows" id="folderRows">
+        <div class="empty-note">No files yet.</div>
+      </div>
+    </div>
+  </div>
+
   <footer>
-    Files never leave this tab — they're decoded in browser memory and saved locally (IndexedDB), so your library is still here next time you open this page.<br>
+    Files loaded straight from your computer stay in this tab only, for this session. Files added to the File Folder tab are decoded in browser memory and saved locally (IndexedDB) — along with their Skip Start / Skip End — so that folder is still here next time you open this page.<br>
     Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centred on the moment playback stopped.
   </footer>
 
@@ -879,6 +975,7 @@
   // ---------------- State ----------------
   let library = [];          // {id, name, size, url, audioBuffer, wavInfo}
   let activeId = null;
+  let folderLibrary = [];    // shared local File Folder: {id, name, size, audioBuffer, skipStart:'', skipEnd:'', _rawBuffer}
   let audioEl = null;
   let audioCtx = null;
   let sourceNode = null;
@@ -965,6 +1062,7 @@
   let tapRunning = false;
   let lastTapFileSummaries = null; // cached results, so "Show top" can re-slice without re-running analysis
   let scatterPoints = [];   // {cx, cy, color, label, freq, avgPct, ...} — hit-testable dots on the scatter graph
+  let tapHiddenLabels = new Set(); // file labels toggled off (click a legend name) — hidden from the scatter graph only
 
   // Clustering page state
   const dropzoneCluster = el('dropzoneCluster');
@@ -987,12 +1085,29 @@
     clusterEngineNote.textContent = CLUSTER_ENGINE_NOTES[clusterEngineSelect.value] || '';
   });
 
+  // File Folder page state
+  const dropzoneFolder = el('dropzoneFolder');
+  const fileInputFolder = el('fileInputFolder');
+  const folderRows = el('folderRows');
+  const folderFileCount = el('folderFileCount');
+
+  // "Load from local folder" buttons next to each tool's dropzone
+  const loadFromFolderBtnAnalyze = el('loadFromFolderBtnAnalyze');
+  const loadFromFolderBtnCompare = el('loadFromFolderBtnCompare');
+  const loadFromFolderBtnTap = el('loadFromFolderBtnTap');
+  const loadFromFolderBtnCluster = el('loadFromFolderBtnCluster');
+
   // ---------------- Persistence (IndexedDB) ----------------
-  // Keeps every loaded .wav — plus, for the Tap Analyser, its skip-start/
-  // skip-end values and included/excluded tick state — saved locally, so the
-  // library survives a page reload instead of disappearing when the tab closes.
+  // A single shared "File Folder" (fileFolder store) is now the only place
+  // files + their Skip Start / Skip End get saved locally. Each of the four
+  // tools (Waveform Lab, Compare, Tap Analyser, Clustering) is session-only
+  // for files picked straight from your computer; loading from the folder
+  // instead brings along its saved skip times. `library`/`tapLibrary`/
+  // `clusterLibrary` are legacy stores kept only so existing saved files
+  // can be migrated into `fileFolder` the first time a returning user's DB
+  // gets upgraded — nothing writes to them any more.
   const DB_NAME = 'waveform-lab-db';
-  const DB_VERSION = 2;
+  const DB_VERSION = 3;
   let dbPromise = null;
 
   function openDB(){
@@ -1000,11 +1115,40 @@
     dbPromise = new Promise((resolve, reject) => {
       if (!window.indexedDB){ reject(new Error('IndexedDB unavailable')); return; }
       const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = () => {
+      req.onupgradeneeded = (event) => {
         const db = req.result;
         if (!db.objectStoreNames.contains('library')) db.createObjectStore('library', {keyPath:'id'});
         if (!db.objectStoreNames.contains('tapLibrary')) db.createObjectStore('tapLibrary', {keyPath:'id'});
         if (!db.objectStoreNames.contains('clusterLibrary')) db.createObjectStore('clusterLibrary', {keyPath:'id'});
+        const hadFolder = db.objectStoreNames.contains('fileFolder');
+        if (!hadFolder) db.createObjectStore('fileFolder', {keyPath:'id'});
+
+        // One-time migration: fold any files already saved under the old
+        // per-section stores into the new shared folder, so upgrading
+        // doesn't lose anything a returning user had saved. Runs inside the
+        // same versionchange transaction as the store creation above.
+        if (!hadFolder){
+          const tx = event.target.transaction;
+          const folderStore = tx.objectStore('fileFolder');
+          const seen = new Set();
+          const mergeFrom = (storeName, mapFields) => {
+            if (!db.objectStoreNames.contains(storeName)) return;
+            const src = tx.objectStore(storeName);
+            src.openCursor().onsuccess = (ev) => {
+              const cursor = ev.target.result;
+              if (!cursor) return;
+              const rec = cursor.value;
+              if (!seen.has(rec.id)){
+                seen.add(rec.id);
+                folderStore.put(mapFields(rec));
+              }
+              cursor.continue();
+            };
+          };
+          mergeFrom('tapLibrary', rec => ({ id: rec.id, name: rec.name, size: rec.size, arrayBuffer: rec.arrayBuffer, skipStart: rec.skipStart || '', skipEnd: rec.skipEnd || '' }));
+          mergeFrom('clusterLibrary', rec => ({ id: rec.id, name: rec.name, size: rec.size, arrayBuffer: rec.arrayBuffer, skipStart: rec.cropStart || '', skipEnd: rec.cropEnd || '' }));
+          mergeFrom('library', rec => ({ id: rec.id, name: rec.name, size: rec.size, arrayBuffer: rec.arrayBuffer, skipStart: '', skipEnd: '' }));
+        }
       };
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
@@ -1048,20 +1192,31 @@
     }catch(err){ console.warn('Could not read from local storage', err); return []; }
   }
 
-  function persistTapEntry(entry){
-    idbPut('tapLibrary', {
+  // Saves/updates one file in the shared local File Folder (name, size, raw
+  // bytes, Skip Start / Skip End). This is the only place file data gets
+  // persisted now — Waveform Lab, Compare, Tap Analyser and Clustering no
+  // longer save their working lists themselves.
+  function persistFolderEntry(entry){
+    idbPut('fileFolder', {
       id: entry.id, name: entry.name, size: entry.size,
-      skipStart: entry.skipStart, skipEnd: entry.skipEnd, included: entry.included,
+      skipStart: entry.skipStart, skipEnd: entry.skipEnd,
       arrayBuffer: entry._rawBuffer
     });
   }
 
-  function persistClusterEntry(entry){
-    idbPut('clusterLibrary', {
-      id: entry.id, name: entry.name, size: entry.size,
-      cropStart: entry.cropStart, cropEnd: entry.cropEnd, included: entry.included,
-      arrayBuffer: entry._rawBuffer
-    });
+  // When a Tap Analyser / Clustering row that was loaded from the shared
+  // folder (entry._folderSynced) has its skip/crop times edited, mirror
+  // those times back onto the matching folder entry and save them — so the
+  // folder always reflects the latest times, wherever they were last set.
+  // Files picked ad hoc from your computer (no matching folder entry) are
+  // left alone; nothing gets persisted for them.
+  function syncEntryToFolder(entry, startField, endField){
+    if (!entry._folderSynced) return;
+    const rec = folderLibrary.find(f => f.id === entry.id);
+    if (!rec) return;
+    rec.skipStart = entry[startField];
+    rec.skipEnd = entry[endField];
+    persistFolderEntry(rec);
   }
 
   // ---------------- Utils ----------------
@@ -2387,7 +2542,6 @@
           };
           library.push(entry);
           sortByName(library);
-          idbPut('library', { id: entry.id, name: entry.name, size: entry.size, arrayBuffer: arrayBuffer.slice(0) });
           renderFileList();
           renderCompareRows();
           if (activeId === null) selectFile(entry.id);
@@ -2404,7 +2558,7 @@
   function renderFileList(){
     fileCount.textContent = `${library.length} loaded`;
     if (library.length === 0){
-      fileList.innerHTML = '<div class="empty-note">No files yet. Drop or select .wav files above — they\'re saved locally, so they\'ll still be here next time.</div>';
+      fileList.innerHTML = '<div class="empty-note">No files yet. Drop or select .wav files above, or load some from your local folder — files picked from your computer here are session-only.</div>';
       return;
     }
     fileList.innerHTML = '';
@@ -2446,7 +2600,6 @@
     const entry = library[idx];
     const wasActive = activeId === entry.id;
     library.splice(idx, 1);
-    idbDelete('library', entry.id);
     if (entry.url) URL.revokeObjectURL(entry.url);
 
     if (wasActive){
@@ -2886,7 +3039,6 @@
           };
           tapLibrary.push(entry);
           sortByName(tapLibrary);
-          persistTapEntry(entry);
           renderTapRows();
           tmpCtx.close();
         }catch(err){
@@ -2938,7 +3090,6 @@
         entry.included = includeInput.checked;
         row.classList.toggle('excluded', !entry.included);
         tapFileCount.textContent = `${tapLibrary.length} loaded · ${tapLibrary.filter(e => e.included !== false).length} selected`;
-        persistTapEntry(entry);
       });
       includeWrap.appendChild(includeInput);
 
@@ -2951,7 +3102,6 @@
       removeBtn.title = 'Remove this file';
       removeBtn.addEventListener('click', () => {
         tapLibrary = tapLibrary.filter(f => f.id !== entry.id);
-        idbDelete('tapLibrary', entry.id);
         renderTapRows();
       });
       head.appendChild(includeWrap);
@@ -2971,7 +3121,7 @@
       const ssInput = document.createElement('input');
       ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'auto';
       ssInput.value = entry.skipStart;
-      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawTapRowWave(canvas, entry); persistTapEntry(entry); });
+      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawTapRowWave(canvas, entry); syncEntryToFolder(entry, 'skipStart', 'skipEnd'); });
       ssField.appendChild(ssInput);
 
       const seField = document.createElement('div');
@@ -2980,7 +3130,7 @@
       const seInput = document.createElement('input');
       seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
       seInput.value = entry.skipEnd;
-      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawTapRowWave(canvas, entry); persistTapEntry(entry); });
+      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawTapRowWave(canvas, entry); syncEntryToFolder(entry, 'skipStart', 'skipEnd'); });
       seField.appendChild(seInput);
 
       fields.appendChild(ssField);
@@ -3023,7 +3173,6 @@
           };
           clusterLibrary.push(entry);
           sortByName(clusterLibrary);
-          persistClusterEntry(entry);
           renderClusterRows();
           tmpCtx.close();
         }catch(err){
@@ -3078,7 +3227,6 @@
         entry.included = includeInput.checked;
         row.classList.toggle('excluded', !entry.included);
         clusterFileCount.textContent = `${clusterLibrary.length} loaded · ${clusterLibrary.filter(e => e.included !== false).length} selected`;
-        persistClusterEntry(entry);
       });
       includeWrap.appendChild(includeInput);
 
@@ -3091,7 +3239,6 @@
       removeBtn.title = 'Remove this file';
       removeBtn.addEventListener('click', () => {
         clusterLibrary = clusterLibrary.filter(f => f.id !== entry.id);
-        idbDelete('clusterLibrary', entry.id);
         renderClusterRows();
       });
       head.appendChild(includeWrap);
@@ -3111,7 +3258,7 @@
       const csInput = document.createElement('input');
       csInput.type = 'number'; csInput.min = '0'; csInput.step = '0.1'; csInput.placeholder = '0';
       csInput.value = entry.cropStart;
-      csInput.addEventListener('change', () => { entry.cropStart = csInput.value; drawClusterRowWave(canvas, entry); persistClusterEntry(entry); });
+      csInput.addEventListener('change', () => { entry.cropStart = csInput.value; drawClusterRowWave(canvas, entry); syncEntryToFolder(entry, 'cropStart', 'cropEnd'); });
       csField.appendChild(csInput);
 
       const ceField = document.createElement('div');
@@ -3120,7 +3267,7 @@
       const ceInput = document.createElement('input');
       ceInput.type = 'number'; ceInput.min = '0'; ceInput.step = '0.1'; ceInput.placeholder = '0';
       ceInput.value = entry.cropEnd;
-      ceInput.addEventListener('change', () => { entry.cropEnd = ceInput.value; drawClusterRowWave(canvas, entry); persistClusterEntry(entry); });
+      ceInput.addEventListener('change', () => { entry.cropEnd = ceInput.value; drawClusterRowWave(canvas, entry); syncEntryToFolder(entry, 'cropStart', 'cropEnd'); });
       ceField.appendChild(ceInput);
 
       fields.appendChild(csField);
@@ -3145,6 +3292,304 @@
   dropzoneCluster.addEventListener('drop', (e) => {
     if (e.dataTransfer.files && e.dataTransfer.files.length) addClusterFiles(e.dataTransfer.files);
   });
+
+  // ---------------- File Folder page ----------------
+  // The one shared, persisted library. Files added here (and their Skip
+  // Start / Skip End) are saved to IndexedDB and can be pulled into any of
+  // the four tools above via their "Load from local folder" button.
+  function addFolderFiles(fileArr){
+    [...fileArr].forEach(file => {
+      if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const arrayBuffer = e.target.result;
+        try{
+          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
+          const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
+          const entry = {
+            id: uid(), name: file.name, size: file.size, audioBuffer,
+            skipStart:'', skipEnd:'',
+            _rawBuffer: arrayBuffer.slice(0)
+          };
+          folderLibrary.push(entry);
+          sortByName(folderLibrary);
+          persistFolderEntry(entry);
+          renderFolderRows();
+          tmpCtx.close();
+        }catch(err){
+          console.error('Could not decode', file.name, err);
+          alert(`Couldn't decode "${file.name}" as a WAV file.`);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function drawFolderRowWave(canvas, entry){
+    drawWaveformOverview(canvas, entry.audioBuffer);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    const dur = entry.audioBuffer.duration || 1;
+    const ss = parseFloat(entry.skipStart);
+    const se = parseFloat(entry.skipEnd);
+    ctx.fillStyle = 'rgba(194,59,46,0.16)';
+    if (isFinite(ss) && ss > 0) ctx.fillRect(0, 0, Math.min(w, (ss/dur)*w), h);
+    if (isFinite(se) && se < dur) ctx.fillRect(Math.max(0,(se/dur)*w), 0, w - Math.max(0,(se/dur)*w), h);
+  }
+
+  function renderFolderRows(){
+    folderFileCount.textContent = `${folderLibrary.length} saved`;
+    if (!folderLibrary.length){
+      folderRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+      return;
+    }
+    folderRows.innerHTML = '';
+    folderLibrary.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'tap-row';
+
+      const head = document.createElement('div');
+      head.className = 'tr-head';
+
+      const nameEl = document.createElement('div');
+      nameEl.className = 'tr-name';
+      nameEl.textContent = entry.name;
+      nameEl.title = 'Click to rename';
+
+      const startRename = () => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'tr-name-input';
+        input.value = entry.name;
+        nameEl.replaceWith(input);
+        input.focus();
+        input.select();
+
+        let done = false;
+        const commit = () => {
+          if (done) return;
+          done = true;
+          const newName = input.value.trim();
+          if (newName && newName !== entry.name){
+            entry.name = newName;
+            persistFolderEntry(entry);
+            sortByName(folderLibrary);
+          }
+          renderFolderRows();
+        };
+        const cancel = () => {
+          if (done) return;
+          done = true;
+          renderFolderRows();
+        };
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+          else if (e.key === 'Escape'){ e.preventDefault(); cancel(); }
+        });
+      };
+      nameEl.addEventListener('click', startRename);
+
+      const renameBtn = document.createElement('button');
+      renameBtn.className = 'tr-rename';
+      renameBtn.innerHTML = '&#9998;';
+      renameBtn.title = 'Rename this file';
+      renameBtn.addEventListener('click', startRename);
+
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'tr-remove';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.title = 'Delete this file from your local folder';
+      removeBtn.addEventListener('click', () => {
+        folderLibrary = folderLibrary.filter(f => f.id !== entry.id);
+        idbDelete('fileFolder', entry.id);
+        renderFolderRows();
+      });
+      head.appendChild(nameEl);
+      head.appendChild(renameBtn);
+      head.appendChild(removeBtn);
+
+      const canvas = document.createElement('canvas');
+      canvas.className = 'tr-wave';
+      canvas.width = 1200; canvas.height = 70;
+
+      const fields = document.createElement('div');
+      fields.className = 'tr-fields';
+
+      const ssField = document.createElement('div');
+      ssField.className = 'tap-field';
+      ssField.innerHTML = '<label>Skip Start (s)</label>';
+      const ssInput = document.createElement('input');
+      ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'none';
+      ssInput.value = entry.skipStart;
+      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawFolderRowWave(canvas, entry); persistFolderEntry(entry); });
+      ssField.appendChild(ssInput);
+
+      const seField = document.createElement('div');
+      seField.className = 'tap-field';
+      seField.innerHTML = '<label>Skip End (s)</label>';
+      const seInput = document.createElement('input');
+      seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
+      seInput.value = entry.skipEnd;
+      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawFolderRowWave(canvas, entry); persistFolderEntry(entry); });
+      seField.appendChild(seInput);
+
+      fields.appendChild(ssField);
+      fields.appendChild(seField);
+
+      row.appendChild(head);
+      row.appendChild(canvas);
+      row.appendChild(fields);
+      folderRows.appendChild(row);
+
+      drawFolderRowWave(canvas, entry);
+    });
+  }
+
+  fileInputFolder.addEventListener('change', (e) => addFolderFiles(e.target.files));
+  ;['dragover','dragenter'].forEach(evtName => {
+    dropzoneFolder.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneFolder.classList.add('drag'); });
+  });
+  ;['dragleave','drop'].forEach(evtName => {
+    dropzoneFolder.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneFolder.classList.remove('drag'); });
+  });
+  dropzoneFolder.addEventListener('drop', (e) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length) addFolderFiles(e.dataTransfer.files);
+  });
+
+  // ---------------- Folder picker modal ----------------
+  // Shared "load from local folder" UI, opened from each tool's "Load from
+  // local folder" button. `config` says which working list to add into and
+  // how to turn a folder record into that section's entry shape:
+  //   getTarget() -> the section's current working-list array (fetched
+  //                  fresh at confirm-time, since these arrays get
+  //                  reassigned elsewhere via `x = x.filter(...)`)
+  //   buildEntry(rec) -> a new entry for that section, built from the
+  //                      folder record (reusing its already-decoded
+  //                      audioBuffer rather than re-decoding)
+  //   onAdded() -> re-render (and any other post-add wiring) for that page
+  function openFolderPicker(config){
+    if (!folderLibrary.length){
+      alert('Your local folder is empty. Add files to it from the File Folder tab first.');
+      return;
+    }
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    const box = document.createElement('div');
+    box.className = 'modal-box';
+
+    const header = document.createElement('div');
+    header.className = 'modal-header';
+    const title = document.createElement('h3');
+    title.textContent = 'Load from local folder';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'modal-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.title = 'Cancel';
+    closeBtn.addEventListener('click', () => overlay.remove());
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+
+    const body = document.createElement('div');
+    body.className = 'modal-body';
+    const checked = new Set();
+    folderLibrary.forEach(entry => {
+      const row = document.createElement('label');
+      row.className = 'folder-pick-row';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.addEventListener('change', () => { if (cb.checked) checked.add(entry.id); else checked.delete(entry.id); });
+      const info = document.createElement('div');
+      info.className = 'fp-info';
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'fp-name';
+      nameDiv.textContent = entry.name;
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'fp-meta';
+      const trimBits = [
+        entry.skipStart !== '' ? `skip start ${entry.skipStart}s` : null,
+        entry.skipEnd !== '' ? `skip end ${entry.skipEnd}s` : null,
+      ].filter(Boolean).join(' · ');
+      metaDiv.textContent = fmtBytes(entry.size) + (trimBits ? ' · ' + trimBits : '');
+      info.appendChild(nameDiv);
+      info.appendChild(metaDiv);
+      row.appendChild(cb);
+      row.appendChild(info);
+      body.appendChild(row);
+    });
+
+    const footer = document.createElement('div');
+    footer.className = 'modal-footer';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'text-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => overlay.remove());
+    const addBtn = document.createElement('button');
+    addBtn.className = 'text-btn';
+    addBtn.textContent = 'Add selected';
+    addBtn.addEventListener('click', () => {
+      const target = config.getTarget();
+      const existingIds = new Set(target.map(e => e.id));
+      let added = 0;
+      checked.forEach(id => {
+        if (existingIds.has(id)) return; // already loaded into this section
+        const rec = folderLibrary.find(f => f.id === id);
+        if (!rec) return;
+        target.push(config.buildEntry(rec));
+        added++;
+      });
+      if (added){
+        sortByName(target);
+        config.onAdded();
+      }
+      overlay.remove();
+    });
+    footer.appendChild(cancelBtn);
+    footer.appendChild(addBtn);
+
+    box.appendChild(header);
+    box.appendChild(body);
+    box.appendChild(footer);
+    overlay.appendChild(box);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  }
+
+  const libraryFolderPickerConfig = {
+    getTarget: () => library,
+    buildEntry: (rec) => ({
+      id: rec.id, name: rec.name, size: rec.size,
+      url: URL.createObjectURL(new Blob([rec._rawBuffer], {type:'audio/wav'})),
+      audioBuffer: rec.audioBuffer, wavInfo: parseWavHeader(rec._rawBuffer.slice(0))
+    }),
+    onAdded: () => {
+      renderFileList();
+      renderCompareRows();
+      if (activeId === null && library.length) selectFile(library[0].id);
+    }
+  };
+  loadFromFolderBtnAnalyze.addEventListener('click', () => openFolderPicker(libraryFolderPickerConfig));
+  loadFromFolderBtnCompare.addEventListener('click', () => openFolderPicker(libraryFolderPickerConfig));
+
+  loadFromFolderBtnTap.addEventListener('click', () => openFolderPicker({
+    getTarget: () => tapLibrary,
+    buildEntry: (rec) => ({
+      id: rec.id, name: rec.name, size: rec.size, audioBuffer: rec.audioBuffer,
+      skipStart: rec.skipStart || '', skipEnd: rec.skipEnd || '', included: true,
+      _rawBuffer: rec._rawBuffer, _folderSynced: true
+    }),
+    onAdded: () => renderTapRows()
+  }));
+
+  loadFromFolderBtnCluster.addEventListener('click', () => openFolderPicker({
+    getTarget: () => clusterLibrary,
+    buildEntry: (rec) => ({
+      id: rec.id, name: rec.name, size: rec.size, audioBuffer: rec.audioBuffer,
+      cropStart: rec.skipStart || '', cropEnd: rec.skipEnd || '', included: true,
+      _rawBuffer: rec._rawBuffer, _folderSynced: true
+    }),
+    onAdded: () => renderClusterRows()
+  }));
 
   async function runTapAnalysis(){
     if (tapRunning) return;
@@ -3202,6 +3647,7 @@
     if (errors.length) tapStatus.classList.add('err');
 
     lastTapFileSummaries = fileSummaries;
+    tapHiddenLabels = new Set(); // fresh run — show every file by default
     renderScatter(fileSummaries);
     renderVarianceTables(fileSummaries);
   }
@@ -3224,7 +3670,17 @@
 
   function renderScatter(fileSummaries){
     const topN = getTapTopN();
-    fileSummaries = fileSummaries.map(fs => ({ ...fs, freqSummary: fs.freqSummary.slice(0, topN) }));
+    // Colour is assigned from each file's position in the *full* (unfiltered)
+    // list, so a file's colour never shifts when other files get hidden —
+    // and stays consistent with the same file's row in the variance tables
+    // below, which index off this same full list independently.
+    const allSummaries = fileSummaries.map((fs, fi) => ({
+      ...fs,
+      freqSummary: fs.freqSummary.slice(0, topN),
+      color: TAP_COLOURS[fi % TAP_COLOURS.length],
+    }));
+    const visibleSummaries = allSummaries.filter(fs => !tapHiddenLabels.has(fs.label));
+
     const ctx = scatterCanvas.getContext('2d');
     const w = scatterCanvas.width, h = scatterCanvas.height;
     ctx.clearRect(0,0,w,h);
@@ -3232,15 +3688,15 @@
     ctx.fillRect(0,0,w,h);
 
     const allFreqs = [], allPcts = [];
-    fileSummaries.forEach(fs => fs.freqSummary.forEach(e => { allFreqs.push(e.freq); allPcts.push(e.avgPct); }));
+    visibleSummaries.forEach(fs => fs.freqSummary.forEach(e => { allFreqs.push(e.freq); allPcts.push(e.avgPct); }));
 
     if (!allFreqs.length){
       ctx.fillStyle = '#83837c';
       ctx.font = '15px "JetBrains Mono", monospace';
-      ctx.fillText('No frequency data to plot.', 20, h/2);
-      scatterLegend.innerHTML = '';
+      ctx.fillText(allSummaries.length ? 'All files are hidden — click a name below to show it.' : 'No frequency data to plot.', 20, h/2);
       scatterPoints = [];
       scatterTooltip.classList.remove('visible');
+      renderScatterLegend(allSummaries);
       return;
     }
 
@@ -3283,19 +3739,18 @@
     // remember each one's canvas position + underlying data so a click on
     // the graph can look up which point was hit.
     scatterPoints = [];
-    fileSummaries.forEach((fs, fi) => {
-      const color = TAP_COLOURS[fi % TAP_COLOURS.length];
+    visibleSummaries.forEach(fs => {
       fs.freqSummary.forEach(entry => {
         const cx = toX(entry.freq), cy = toY(entry.avgPct);
         ctx.beginPath();
         ctx.arc(cx, cy, dotR, 0, Math.PI*2);
-        ctx.fillStyle = color;
+        ctx.fillStyle = fs.color;
         ctx.fill();
         ctx.strokeStyle = '#fbfbf9';
         ctx.lineWidth = 1.5;
         ctx.stroke();
         scatterPoints.push({
-          cx, cy, color, label: fs.label,
+          cx, cy, color: fs.color, label: fs.label,
           freq: entry.freq, avgPct: entry.avgPct, appearances: entry.appearances,
           eventCount: fs.eventCount, stdPct: entry.stdPct,
           minPct: entry.minPct, maxPct: entry.maxPct, stdHz: entry.stdHz
@@ -3304,11 +3759,31 @@
     });
     scatterTooltip.classList.remove('visible');
 
-    scatterLegend.innerHTML = fileSummaries.map((fs, fi) => `
-      <div class="sl-item">
-        <span class="sl-swatch" style="background:${TAP_COLOURS[fi % TAP_COLOURS.length]};"></span>
-        ${fs.label} (${fs.eventCount}/${fs.detectedEvents} events)
-      </div>`).join('');
+    renderScatterLegend(allSummaries);
+  }
+
+  // Legend under the scatter graph: one clickable entry per file. Clicking a
+  // name toggles that file's points on/off the graph above (the variance
+  // tables below are unaffected — this only controls what's plotted).
+  function renderScatterLegend(allSummaries){
+    scatterLegend.innerHTML = '';
+    allSummaries.forEach(fs => {
+      const hidden = tapHiddenLabels.has(fs.label);
+      const item = document.createElement('div');
+      item.className = 'sl-item' + (hidden ? ' hidden' : '');
+      item.title = hidden ? 'Click to show this file on the graph' : 'Click to hide this file from the graph';
+      const swatch = document.createElement('span');
+      swatch.className = 'sl-swatch';
+      swatch.style.background = fs.color;
+      item.appendChild(swatch);
+      item.appendChild(document.createTextNode(`${fs.label} (${fs.eventCount}/${fs.detectedEvents} events)`));
+      item.addEventListener('click', () => {
+        if (tapHiddenLabels.has(fs.label)) tapHiddenLabels.delete(fs.label);
+        else tapHiddenLabels.add(fs.label);
+        if (lastTapFileSummaries) renderScatter(lastTapFileSummaries);
+      });
+      scatterLegend.appendChild(item);
+    });
   }
 
   function renderVarianceTables(fileSummaries){
@@ -3339,9 +3814,29 @@
   // ---------------- Clustering: run pipeline ----------------
   // Mirrors build_dataset_unlabeled() + kmeans_cluster() + rf_proximity_clustering()
   // from random_forest.py: detect taps per file -> FFT-feature each tap
-  // (fmax fixed at 1500 Hz, n_bins=64) -> KMeans/silhouette picks k -> RF
-  // proximity clustering (primary) at that k -> adjusted Rand index vs. KMeans.
-  const CLUSTER_N_BINS = 64, CLUSTER_FMIN = 20, CLUSTER_FMAX = 1500;
+  // (fmax adjustable, default 1500 Hz; n_bins=64) -> KMeans/silhouette picks k
+  // -> RF proximity clustering (primary) at that k -> adjusted Rand index vs. KMeans.
+  const CLUSTER_N_BINS = 64, CLUSTER_FMIN = 20;
+  // Defaults match extract_window()'s pre_ms=5 and fft_features()/get_bin_edges()'s
+  // implicit fmax=1500 usage from when this pipeline was first built — both are
+  // now user-adjustable in Advanced settings, with a button to reset back to these.
+  const CLUSTER_OFFSET_DEFAULT = 0.005, CLUSTER_FMAX_DEFAULT = 1500;
+
+  // Reads the Offset (s) / Fmax (Hz) advanced fields, falling back to the
+  // defaults above for blank/invalid input.
+  function getClusterOffsetFmax(){
+    const offsetSec = parseFloat(el('clusterOffset').value);
+    const fmax = parseFloat(el('clusterFmax').value);
+    return {
+      offsetSec: isFinite(offsetSec) && offsetSec >= 0 ? offsetSec : CLUSTER_OFFSET_DEFAULT,
+      fmax: isFinite(fmax) && fmax > 0 ? fmax : CLUSTER_FMAX_DEFAULT,
+    };
+  }
+
+  el('clusterResetOffsetFmax').addEventListener('click', () => {
+    el('clusterOffset').value = CLUSTER_OFFSET_DEFAULT;
+    el('clusterFmax').value = CLUSTER_FMAX_DEFAULT;
+  });
 
   async function runClustering(){
     const engine = el('clusterEngine').value;
@@ -3371,6 +3866,8 @@
     const minGapMs = (parseFloat(el('clusterMinGap').value) || 0.15) * 1000;
     const forceKRaw = el('clusterForceK').value.trim();
     const forceK = forceKRaw !== '' ? Math.max(2, parseInt(forceKRaw, 10)) : null;
+    const { offsetSec, fmax } = getClusterOffsetFmax();
+    const offsetMs = offsetSec * 1000;
 
     const X = [], meta = [];
     const warnings = [];
@@ -3417,8 +3914,8 @@
       await sleep0();
 
       for (let i = 0; i < onsets.length; i++){
-        const segment = extractWindowRF(samples, sr, onsets[i], windowMs);
-        const feat = fftFeaturesRF(segment, sr, { nBins: CLUSTER_N_BINS, fmin: CLUSTER_FMIN, fmax: CLUSTER_FMAX, noiseSpectrum });
+        const segment = extractWindowRF(samples, sr, onsets[i], windowMs, offsetMs);
+        const feat = fftFeaturesRF(segment, sr, { nBins: CLUSTER_N_BINS, fmin: CLUSTER_FMIN, fmax, noiseSpectrum });
         X.push(Array.from(feat));
         meta.push({ file: entry.name, tapIndex: i });
         if (i % 5 === 4) await sleep0();
@@ -3463,8 +3960,8 @@
       ? `Done — ${X.length} taps, k=${k}, agreement=${agreement.toFixed(3)}. Notes: ${warnings.join(' · ')}`
       : `Done — ${X.length} taps across ${activeEntries.length} file(s), k=${k}, agreement (adjusted Rand vs. KMeans)=${agreement.toFixed(3)}.`;
 
-    const edges = getBinEdgesRF(srUsed, CLUSTER_N_BINS, CLUSTER_FMIN, CLUSTER_FMAX);
-    renderClusterResults({ meta, rfLabels: rfRes.labels, importances: rfRes.importances, edges, k, agreement });
+    const edges = getBinEdgesRF(srUsed, CLUSTER_N_BINS, CLUSTER_FMIN, fmax);
+    renderClusterResults({ meta, rfLabels: rfRes.labels, importances: rfRes.importances, edges, k, agreement, fmax });
   }
 
   // ---------------- Clustering: "real Python" engine via Pyodide ----------------
@@ -3665,6 +4162,12 @@ def run_clustering_bridge(payload_json):
     force_k = payload.get('forceK')
     min_gap_ms = payload['minGapMs']
     random_state = payload['randomState']
+    offset_ms = payload.get('offsetMs')
+    if offset_ms is None:
+        offset_ms = 5
+    fmax = payload.get('fmax')
+    if fmax is None:
+        fmax = 1500
 
     X, meta = [], []
     sample_rates = set()
@@ -3690,8 +4193,8 @@ def run_clustering_bridge(payload_json):
             warnings.append(f"{name}: no quiet gap found, denoising skipped for this file")
 
         for i, onset in enumerate(onsets):
-            segment = extract_window(signal, sr, onset, window_ms=window_ms)
-            feat = fft_features(segment, sr, n_bins=64, fmin=20, fmax=1500, noise_spectrum=noise_spectrum)
+            segment = extract_window(signal, sr, onset, window_ms=window_ms, pre_ms=offset_ms)
+            feat = fft_features(segment, sr, n_bins=64, fmin=20, fmax=fmax, noise_spectrum=noise_spectrum)
             X.append(feat)
             meta.append({'file': name, 'tapIndex': i})
         if sr_used is None:
@@ -3710,7 +4213,7 @@ def run_clustering_bridge(payload_json):
 
     rf_labels, importances = rf_proximity_clustering(X, k=k, n_estimators=n_estimators, random_state=random_state)
     agreement = adjusted_rand_score(km_labels, rf_labels)
-    edges = get_bin_edges(sr_used, n_bins=64, fmin=20, fmax=1500)
+    edges = get_bin_edges(sr_used, n_bins=64, fmin=20, fmax=fmax)
 
     return json.dumps({
         'meta': meta,
@@ -3774,6 +4277,8 @@ def run_clustering_bridge(payload_json):
     const minGapMs = (parseFloat(el('clusterMinGap').value) || 0.15) * 1000;
     const forceKRaw = el('clusterForceK').value.trim();
     const forceK = forceKRaw !== '' ? Math.max(2, parseInt(forceKRaw, 10)) : null;
+    const { offsetSec, fmax } = getClusterOffsetFmax();
+    const offsetMs = offsetSec * 1000;
 
     try{
       const pyodide = await ensurePyodideReady((msg) => { clusterStatus.textContent = msg; });
@@ -3816,6 +4321,7 @@ def run_clustering_bridge(payload_json):
       const bridge = pyodide.globals.get('run_clustering_bridge');
       const payload = {
         files: filesData, windowMs, nEstimators, forceK, minGapMs, randomState: 42,
+        offsetMs, fmax,
       };
       const resultJson = bridge(JSON.stringify(payload));
       bridge.destroy();
@@ -3837,7 +4343,7 @@ def run_clustering_bridge(payload_json):
 
       renderClusterResults({
         meta: result.meta, rfLabels: result.rfLabels, importances: result.importances,
-        edges: result.edges, k: result.k, agreement: result.agreement,
+        edges: result.edges, k: result.k, agreement: result.agreement, fmax,
       });
     }catch(err){
       console.error('Pyodide clustering failed', err);
@@ -3851,7 +4357,9 @@ def run_clustering_bridge(payload_json):
   runClusterBtn.addEventListener('click', runClustering);
 
   function renderClusterResults(res){
-    const { meta, rfLabels, importances, edges, k, agreement } = res;
+    const { meta, rfLabels, importances, edges, k, agreement, fmax } = res;
+    const fmaxLabel = fmax != null ? `${fmax} Hz` : 'your chosen Fmax';
+    el('clusterFreqRangeLabel').textContent = `(RF-proximity clustering, FFT features up to ${fmaxLabel})`;
 
     // --- Table 1: RF-proximity cluster sizes ---
     const sizeCounts = {};
@@ -3906,7 +4414,7 @@ def run_clustering_bridge(payload_json):
         </table>
       </div>
       <div class="variance-block">
-        <div class="vb-title">Top 10 frequency bins the Random Forest found most informative (fmax 1500 Hz)</div>
+        <div class="vb-title">Top 10 frequency bins the Random Forest found most informative (fmax ${fmaxLabel})</div>
         <table class="variance">
           <thead><tr><th>Bin</th><th>Range</th><th>Importance</th></tr></thead>
           <tbody>${binRows || '<tr><td colspan="3" style="color:var(--text-faint);">No importances.</td></tr>'}</tbody>
@@ -4752,42 +5260,23 @@ def run_clustering_bridge(payload_json):
     scatterCanvas.style.cursor = pt ? 'pointer' : 'default';
   });
 
-  // ---------------- Restore saved libraries ----------------
+  // ---------------- Restore saved folder ----------------
   async function restoreLibraries(){
-    // Rebuilds both file libraries from IndexedDB after a reload — including,
-    // for the Tap Analyser, each recording's skip-start/skip-end values and
-    // whether it was ticked for inclusion — so nothing has to be re-loaded.
+    // Rebuilds the shared File Folder from IndexedDB after a reload —
+    // including each file's Skip Start / Skip End — so it's still there
+    // next time. Waveform Lab, Compare, Tap Analyser and Clustering are no
+    // longer auto-persisted themselves; each reload starts with an empty
+    // working list in those tools until files are loaded fresh or pulled
+    // in from this folder.
     try{
-      const [libRecords, tapRecords, clusterRecords] = await Promise.all([idbGetAll('library'), idbGetAll('tapLibrary'), idbGetAll('clusterLibrary')]);
-
-      for (const rec of libRecords){
+      const folderRecords = await idbGetAll('fileFolder');
+      for (const rec of folderRecords){
         try{
           const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
           const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
-          const wavInfo = parseWavHeader(rec.arrayBuffer.slice(0));
-          const blob = new Blob([rec.arrayBuffer], {type:'audio/wav'});
-          const url = URL.createObjectURL(blob);
-          library.push({ id: rec.id, name: rec.name, size: rec.size, url, audioBuffer, wavInfo });
-          tmpCtx.close();
-        }catch(err){
-          console.warn('Could not restore', rec.name, err);
-        }
-      }
-      if (library.length){
-        sortByName(library);
-        renderFileList();
-        renderCompareRows();
-        if (activeId === null) selectFile(library[0].id);
-      }
-
-      for (const rec of tapRecords){
-        try{
-          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
-          const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
-          tapLibrary.push({
+          folderLibrary.push({
             id: rec.id, name: rec.name, size: rec.size, audioBuffer,
             skipStart: rec.skipStart || '', skipEnd: rec.skipEnd || '',
-            included: rec.included !== false,
             _rawBuffer: rec.arrayBuffer
           });
           tmpCtx.close();
@@ -4795,32 +5284,12 @@ def run_clustering_bridge(payload_json):
           console.warn('Could not restore', rec.name, err);
         }
       }
-      if (tapLibrary.length){
-        sortByName(tapLibrary);
-        renderTapRows();
-      }
-
-      for (const rec of clusterRecords){
-        try{
-          const tmpCtx = new (window.AudioContext||window.webkitAudioContext)();
-          const audioBuffer = await tmpCtx.decodeAudioData(rec.arrayBuffer.slice(0));
-          clusterLibrary.push({
-            id: rec.id, name: rec.name, size: rec.size, audioBuffer,
-            cropStart: rec.cropStart || '', cropEnd: rec.cropEnd || '',
-            included: rec.included !== false,
-            _rawBuffer: rec.arrayBuffer
-          });
-          tmpCtx.close();
-        }catch(err){
-          console.warn('Could not restore', rec.name, err);
-        }
-      }
-      if (clusterLibrary.length){
-        sortByName(clusterLibrary);
-        renderClusterRows();
+      if (folderLibrary.length){
+        sortByName(folderLibrary);
+        renderFolderRows();
       }
     }catch(err){
-      console.warn('Could not restore saved libraries', err);
+      console.warn('Could not restore local file folder', err);
     }
   }
 
@@ -4832,6 +5301,7 @@ def run_clustering_bridge(payload_json):
   updateFreqRangeLabels();
   renderTapRows();
   renderClusterRows();
+  renderFolderRows();
   restoreLibraries();
 })();
 </script>
