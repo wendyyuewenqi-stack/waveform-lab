@@ -112,6 +112,20 @@
   }
   .dropzone input{display:none;}
   .dropzone .big{font-size:26px;line-height:1;}
+  #dropzoneFolder{position:relative;}
+  .dz-menu{
+    display:none;flex-direction:column;position:absolute;top:100%;left:50%;
+    transform:translateX(-50%);margin-top:6px;min-width:180px;padding:4px;
+    background:#ffffff;border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:0 3px 12px rgba(0,0,0,0.10);z-index:20;cursor:default;
+  }
+  .dz-menu.open{display:flex;}
+  .dz-menu button{
+    display:block;width:100%;text-align:left;font-family:inherit;font-size:13px;
+    padding:9px 12px;border:none;background:transparent;color:var(--text);cursor:pointer;
+    border-radius:var(--radius);
+  }
+  .dz-menu button:hover{background:var(--panel-raised);}
 
   .file-list{display:flex;flex-direction:column;gap:6px;max-height:380px;overflow-y:auto;}
   .file-item{
@@ -1003,12 +1017,17 @@
   <div class="page" id="page-folder">
     <div class="panel">
       <div class="panel-label"><span>Local File Folder</span><span class="count" id="folderFileCount">0 saved</span></div>
-      <label class="dropzone" id="dropzoneFolder">
+      <div class="dropzone" id="dropzoneFolder" tabindex="0" role="button" aria-haspopup="true">
         <span class="big">+</span>
-        Add .wav file(s) to your local folder
+        Add .wav files or a whole folder
         <input type="file" id="fileInputFolder" accept=".wav,audio/wav,audio/x-wav" multiple>
-      </label>
-      <div class="empty-note" style="margin-bottom:10px;">Files added here are saved in your browser (IndexedDB) and stay available across Waveform Lab, Compare, Tap Analyser and Clustering. Set Crop Start / Crop End once and they'll carry over wherever you load a file from this folder — look for the "Load from local folder" button next to each tool's uploader. Group files into folders below to keep things tidy.</div>
+        <input type="file" id="folderDirInput" webkitdirectory directory multiple>
+        <div class="dz-menu" id="dropzoneFolderMenu">
+          <button type="button" id="dzChooseFiles">Choose files&hellip;</button>
+          <button type="button" id="dzChooseFolder">Choose a folder&hellip;</button>
+        </div>
+      </div>
+      <div class="empty-note" style="margin-bottom:10px;">Files added here are saved in your browser (IndexedDB) and stay available across Waveform Lab, Compare, Tap Analyser and Clustering. Set Crop Start / Crop End once and they'll carry over wherever you load a file from this folder — look for the "Load from local folder" button next to each tool's uploader. Choosing or dragging in a whole folder groups its files automatically; group files manually below to keep things tidy.</div>
       <div class="folder-toolbar">
         <input type="search" class="folder-search" id="folderSearchInput" placeholder="Search files by name&hellip;">
         <button class="folder-newbtn" type="button" id="folderNewFolderBtn">+ New folder</button>
@@ -1148,6 +1167,10 @@
   // File Folder page state
   const dropzoneFolder = el('dropzoneFolder');
   const fileInputFolder = el('fileInputFolder');
+  const folderDirInput = el('folderDirInput');
+  const dropzoneFolderMenu = el('dropzoneFolderMenu');
+  const dzChooseFiles = el('dzChooseFiles');
+  const dzChooseFolder = el('dzChooseFolder');
   const folderRows = el('folderRows');
   const folderFileCount = el('folderFileCount');
   const folderSearchInput = el('folderSearchInput');
@@ -3384,8 +3407,9 @@
   // The one shared, persisted library. Files added here (and their Crop
   // Start / Crop End) are saved to IndexedDB and can be pulled into any of
   // the four tools above via their "Load from local folder" button.
-  function addFolderFiles(fileArr){
-    const targetFolderId = currentFolderGroupId; // capture at drop-time, not decode-time
+  // Shared decode/persist path for both single-file(s) upload and whole-
+  // folder upload — each file lands in `targetFolderId` (null = root).
+  function ingestFolderFiles(fileArr, targetFolderId){
     [...fileArr].forEach(file => {
       if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
       const reader = new FileReader();
@@ -3411,6 +3435,124 @@
       };
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  function addFolderFiles(fileArr){
+    const targetFolderId = currentFolderGroupId; // capture at drop-time, not decode-time
+    ingestFolderFiles(fileArr, targetFolderId);
+  }
+
+  // "Upload a whole folder" — picks up every .wav file in the chosen
+  // computer folder (recursively, via webkitRelativePath) and auto-creates
+  // a matching File Folder group named after the top-level folder, so a
+  // folder full of tap recordings arrives already grouped. Subfolders below
+  // that top level are flattened into the same group. If a group with that
+  // name already exists, the files are merged into it instead of making a
+  // duplicate.
+  function addFolderDirectory(fileArr){
+    const wavFiles = [...fileArr].filter(f => /\.wav$/i.test(f.name) || f.type === 'audio/wav' || f.type === 'audio/x-wav');
+    if (!wavFiles.length){
+      alert('No .wav files found in that folder.');
+      return;
+    }
+    const byTopFolder = new Map();
+    wavFiles.forEach(f => {
+      const rel = f.webkitRelativePath || f.name;
+      const top = rel.includes('/') ? rel.split('/')[0] : 'Uploaded folder';
+      if (!byTopFolder.has(top)) byTopFolder.set(top, []);
+      byTopFolder.get(top).push(f);
+    });
+    byTopFolder.forEach((groupFiles, folderName) => {
+      let group = folderGroups.find(g => g.name === folderName);
+      if (!group){
+        group = { id: uid(), name: folderName };
+        folderGroups.push(group);
+        sortByName(folderGroups);
+        persistFolderGroup(group);
+      }
+      ingestFolderFiles(groupFiles, group.id);
+    });
+    renderFolderRows();
+  }
+
+  // ---- Drag-and-drop file/folder auto-detection for the File Folder
+  // dropzone. Dropping loose files behaves like the normal file picker;
+  // dropping a whole folder is detected via the (widely supported, if
+  // non-standard) File System Entries API and routed through the same
+  // auto-grouping path as picking a folder — all from the one dropzone,
+  // no separate control needed.
+
+  // A FileSystemDirectoryReader's readEntries() is only guaranteed to
+  // return *some* of a directory's entries per call — repeat until it
+  // returns an empty batch.
+  function readAllDirectoryEntries(reader){
+    return new Promise((resolve, reject) => {
+      let all = [];
+      const readBatch = () => {
+        reader.readEntries((batch) => {
+          if (!batch || !batch.length){ resolve(all); return; }
+          all = all.concat(batch);
+          readBatch();
+        }, reject);
+      };
+      readBatch();
+    });
+  }
+
+  // Converts a FileSystemFileEntry into a real File, tagging it with a
+  // webkitRelativePath so it can be treated exactly like a file picked via
+  // an OS folder picker (addFolderDirectory groups by the path's first
+  // segment).
+  function fileFromEntry(entry, relPath){
+    return new Promise((resolve, reject) => {
+      entry.file((file) => {
+        try{ Object.defineProperty(file, 'webkitRelativePath', { value: relPath, configurable:true }); }catch(err){}
+        resolve(file);
+      }, reject);
+    });
+  }
+
+  // Recursively walks a dropped FileSystemEntry (file or directory) into a
+  // flat array of Files, building up each one's relative path as it goes.
+  async function walkDroppedEntry(entry, relPath){
+    if (entry.isFile){
+      const path = relPath ? relPath + '/' + entry.name : entry.name;
+      return [await fileFromEntry(entry, path)];
+    }
+    if (entry.isDirectory){
+      const nextPrefix = relPath ? relPath + '/' + entry.name : entry.name;
+      const children = await readAllDirectoryEntries(entry.createReader());
+      const nested = await Promise.all(children.map(child => walkDroppedEntry(child, nextPrefix)));
+      return nested.flat();
+    }
+    return [];
+  }
+
+  // Inspects everything dropped onto the File Folder dropzone, separating
+  // loose files (-> addFolderFiles, lands wherever you're browsing) from
+  // whole folders (-> addFolderDirectory, auto-grouped) — automatically,
+  // with no separate "upload a folder" control.
+  async function handleFolderDrop(dataTransfer){
+    if (!dataTransfer) return;
+    const items = dataTransfer.items;
+    if (!items || !items.length || typeof items[0].webkitGetAsEntry !== 'function'){
+      // No File System Entries API support in this browser — fall back to
+      // treating everything dropped as loose files.
+      if (dataTransfer.files && dataTransfer.files.length) addFolderFiles(dataTransfer.files);
+      return;
+    }
+    const entries = [...items].map(it => it.webkitGetAsEntry()).filter(Boolean);
+    const looseFiles = [];
+    const dirFiles = [];
+    for (const entry of entries){
+      if (entry.isFile){
+        looseFiles.push(await fileFromEntry(entry, ''));
+      } else if (entry.isDirectory){
+        dirFiles.push(...await walkDroppedEntry(entry, ''));
+      }
+    }
+    if (looseFiles.length) addFolderFiles(looseFiles);
+    if (dirFiles.length) addFolderDirectory(dirFiles);
   }
 
   function drawFolderRowWave(canvas, entry){
@@ -4014,7 +4156,38 @@
     renderFolderRows();
   });
 
-  fileInputFolder.addEventListener('change', (e) => addFolderFiles(e.target.files));
+  fileInputFolder.addEventListener('change', (e) => { addFolderFiles(e.target.files); e.target.value = ''; });
+  folderDirInput.addEventListener('change', (e) => { addFolderDirectory(e.target.files); e.target.value = ''; });
+
+  // The dropzone is a plain clickable box (not a <label>) so a click can
+  // open a small "Choose files… / Choose a folder…" menu instead of always
+  // jumping straight to the multi-file picker — same single control either
+  // way, drag-and-drop still auto-detects files vs. a whole folder on top.
+  dropzoneFolder.addEventListener('click', (e) => {
+    // Ignore the synthetic click that bubbles up when we programmatically
+    // call .click() on one of the hidden inputs below (fileInputFolder.click()
+    // / folderDirInput.click()) — otherwise it re-toggles the menu open again
+    // right after we just closed it.
+    if (e.target === fileInputFolder || e.target === folderDirInput) return;
+    dropzoneFolderMenu.classList.toggle('open');
+  });
+  dropzoneFolder.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); dropzoneFolderMenu.classList.toggle('open'); }
+  });
+  document.addEventListener('click', (e) => {
+    if (!dropzoneFolder.contains(e.target)) dropzoneFolderMenu.classList.remove('open');
+  });
+  dzChooseFiles.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropzoneFolderMenu.classList.remove('open');
+    fileInputFolder.click();
+  });
+  dzChooseFolder.addEventListener('click', (e) => {
+    e.stopPropagation();
+    dropzoneFolderMenu.classList.remove('open');
+    folderDirInput.click();
+  });
+
   ;['dragover','dragenter'].forEach(evtName => {
     dropzoneFolder.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneFolder.classList.add('drag'); });
   });
@@ -4022,7 +4195,7 @@
     dropzoneFolder.addEventListener(evtName, (e) => { e.preventDefault(); dropzoneFolder.classList.remove('drag'); });
   });
   dropzoneFolder.addEventListener('drop', (e) => {
-    if (e.dataTransfer.files && e.dataTransfer.files.length) addFolderFiles(e.dataTransfer.files);
+    handleFolderDrop(e.dataTransfer);
   });
 
   // ---------------- Folder picker modal ----------------
