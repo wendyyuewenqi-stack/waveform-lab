@@ -420,9 +420,63 @@
     padding:4px 6px;border:1px solid var(--phosphor-dim);border-radius:var(--radius);
     background:#ffffff;color:var(--text);
   }
+  .folder-toolbar{display:flex;gap:8px;margin-bottom:10px;}
+  .folder-search{
+    flex:1 1 auto;min-width:0;box-sizing:border-box;font-family:inherit;font-size:14px;
+    padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);
+    background:#ffffff;color:var(--text);
+  }
+  .folder-search::placeholder{color:var(--text-faint);}
+  .folder-search:focus{outline:none;border-color:var(--phosphor-dim);}
+  .folder-newbtn{
+    flex-shrink:0;white-space:nowrap;background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    font-family:inherit;font-size:13px;padding:0 14px;border-radius:var(--radius);cursor:pointer;
+    transition:border-color .15s,color .15s;
+  }
+  .folder-newbtn:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
+  .folder-crumbs{
+    display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-faint);
+    margin-bottom:10px;min-height:15px;
+  }
+  .folder-crumbs .fc-seg{cursor:pointer;}
+  .folder-crumbs .fc-seg:hover{color:var(--phosphor);}
+  .folder-crumbs .fc-cur{color:var(--text);}
+  .folder-group-label{
+    font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-faint);
+    margin:14px 0 6px;
+  }
+  .folder-group-label:first-child{margin-top:0;}
+  #folderRows .tap-row.is-group{cursor:pointer;}
+  #folderRows .tap-row.is-group:hover{border-color:var(--phosphor-dim);}
+  #folderRows .tr-meta{font-size:11.5px;color:var(--text-faint);flex-shrink:0;}
   #folderRows .tr-name{cursor:pointer;}
   #folderRows .tr-name:hover{color:var(--phosphor);}
+  #folderRows .tr-chevron{
+    flex-shrink:0;width:12px;color:var(--text-faint);font-size:10px;
+    display:flex;align-items:center;justify-content:center;
+    transition:transform .15s;cursor:pointer;
+  }
+  #folderRows .tap-row.expanded .tr-chevron{transform:rotate(90deg);}
+  #folderRows .tr-body{margin-top:10px;}
+  .tr-fft-label{font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-faint);margin:12px 0 4px;}
+  canvas.tr-fft{width:100%;height:110px;display:block;border-radius:var(--radius);}
   canvas.tr-wave{width:100%;height:70px;display:block;border-radius:var(--radius);margin-bottom:10px;}
+  .tr-dots{
+    background:transparent;border:1px solid var(--line);color:var(--text-faint);
+    width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:15px;line-height:1;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .tr-dots:hover{border-color:var(--phosphor-dim);color:var(--phosphor);}
+  .tr-menu{border-top:1px solid var(--line);margin-top:10px;padding-top:8px;display:flex;flex-direction:column;gap:2px;}
+  .tr-menu button.tr-menu-item{
+    display:flex;align-items:center;gap:8px;text-align:left;width:100%;
+    font-family:inherit;font-size:12.5px;padding:8px 10px;
+    border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:var(--radius);
+  }
+  .tr-menu button.tr-menu-item:hover{background:var(--panel-raised);}
+  .tr-menu button.tr-menu-item.danger{color:var(--danger);}
+  .tr-menu .tr-menu-back{color:var(--text-faint);font-size:11px;}
+  .tr-menu .tr-menu-note{color:var(--text-faint);font-size:12px;padding:8px 10px;}
   .tap-row .tr-fields{display:flex;gap:10px;flex-wrap:wrap;}
   .tap-field{display:flex;flex-direction:column;gap:4px;}
   .tap-field label{font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-faint);}
@@ -594,7 +648,7 @@
       <div class="home-card amber" data-goto="tap">
         <div class="hc-icon">&#10005;</div>
         <div class="hc-title">Tap Analyser</div>
-        <div class="hc-desc">Feed in one or more .wav files of taps or plucks. Auto-detects each transient (with optional skip-start / skip-end trimming), FFTs every event, and scatters the most common frequencies across files with a variance summary.</div>
+        <div class="hc-desc">Feed in one or more .wav files of taps or plucks. Auto-detects each transient (with optional crop-start / crop-end trimming), FFTs every event, and scatters the most common frequencies across files with a variance summary.</div>
         <div class="hc-go">Open &rarr;</div>
       </div>
       <div class="home-card" data-goto="cluster">
@@ -606,7 +660,7 @@
       <div class="home-card" data-goto="folder">
         <div class="hc-icon">&#128193;</div>
         <div class="hc-title">File Folder</div>
-        <div class="hc-desc">Upload .wav files once and save a Skip Start / Skip End for each — then, in any tool above, choose "load from local folder" instead of re-uploading from your computer every time.</div>
+        <div class="hc-desc">Upload .wav files once and save a Crop Start / Crop End for each — then, in any tool above, choose "load from local folder" instead of re-uploading from your computer every time.</div>
         <div class="hc-go">Open &rarr;</div>
       </div>
     </div>
@@ -807,7 +861,7 @@
           <input type="file" id="fileInputTap" accept=".wav,audio/wav,audio/x-wav" multiple>
         </label>
         <button class="folder-load-btn" type="button" id="loadFromFolderBtnTap">Load from local folder</button>
-        <div class="empty-note" style="margin-bottom:10px;">Leave Skip Start blank to auto-detect the end of any leading speech. Skip End trims everything after that many seconds (use it to cut trailing noise).</div>
+        <div class="empty-note" style="margin-bottom:10px;">Leave Crop Start blank to auto-detect the end of any leading speech. Crop End trims that many seconds off the end of the file (use it to cut trailing noise).</div>
         <div class="tap-rows" id="tapRows">
           <div class="empty-note">No files yet.</div>
         </div>
@@ -954,7 +1008,12 @@
         Add .wav file(s) to your local folder
         <input type="file" id="fileInputFolder" accept=".wav,audio/wav,audio/x-wav" multiple>
       </label>
-      <div class="empty-note" style="margin-bottom:10px;">Files added here are saved in your browser (IndexedDB) and stay available across Waveform Lab, Compare, Tap Analyser and Clustering. Set Skip Start / Skip End once and they'll carry over wherever you load a file from this folder — look for the "Load from local folder" button next to each tool's uploader.</div>
+      <div class="empty-note" style="margin-bottom:10px;">Files added here are saved in your browser (IndexedDB) and stay available across Waveform Lab, Compare, Tap Analyser and Clustering. Set Crop Start / Crop End once and they'll carry over wherever you load a file from this folder — look for the "Load from local folder" button next to each tool's uploader. Group files into folders below to keep things tidy.</div>
+      <div class="folder-toolbar">
+        <input type="search" class="folder-search" id="folderSearchInput" placeholder="Search files by name&hellip;">
+        <button class="folder-newbtn" type="button" id="folderNewFolderBtn">+ New folder</button>
+      </div>
+      <div class="folder-crumbs" id="folderCrumbs"></div>
       <div class="tap-rows" id="folderRows">
         <div class="empty-note">No files yet.</div>
       </div>
@@ -962,7 +1021,7 @@
   </div>
 
   <footer>
-    Files loaded straight from your computer stay in this tab only, for this session. Files added to the File Folder tab are decoded in browser memory and saved locally (IndexedDB) — along with their Skip Start / Skip End — so that folder is still here next time you open this page.<br>
+    Files loaded straight from your computer stay in this tab only, for this session. Files added to the File Folder tab are decoded in browser memory and saved locally (IndexedDB) — along with their Crop Start / Crop End — so that folder is still here next time you open this page.<br>
     Spectrum snapshots are computed from a 4096-sample Hann-windowed FFT centred on the moment playback stopped.
   </footer>
 
@@ -975,7 +1034,8 @@
   // ---------------- State ----------------
   let library = [];          // {id, name, size, url, audioBuffer, wavInfo}
   let activeId = null;
-  let folderLibrary = [];    // shared local File Folder: {id, name, size, audioBuffer, skipStart:'', skipEnd:'', _rawBuffer}
+  let folderLibrary = [];    // shared local File Folder: {id, name, size, audioBuffer, skipStart:'', skipEnd:'', folderId:null, _rawBuffer}
+  let folderGroups = [];     // named folders within the File Folder tab: {id, name}
   let audioEl = null;
   let audioCtx = null;
   let sourceNode = null;
@@ -1090,6 +1150,15 @@
   const fileInputFolder = el('fileInputFolder');
   const folderRows = el('folderRows');
   const folderFileCount = el('folderFileCount');
+  const folderSearchInput = el('folderSearchInput');
+  const folderNewFolderBtn = el('folderNewFolderBtn');
+  const folderCrumbs = el('folderCrumbs');
+  let folderSearchQuery = '';
+  let folderExpandedIds = new Set(); // rows the user has clicked open, to show crop controls + summary FFT
+  let currentFolderGroupId = null;   // null = root of the File Folder ("Files" not in any folder)
+  let folderMenuOpen = null;         // {kind:'file'|'folder', id, mode:'main'|'move'} — the one open ⋮ menu
+  let folderRenaming = null;         // {kind:'file'|'folder', id} — the one row mid-rename
+  let addingFolderGroup = false;     // true while the inline "new folder" name input is showing
 
   // "Load from local folder" buttons next to each tool's dropzone
   const loadFromFolderBtnAnalyze = el('loadFromFolderBtnAnalyze');
@@ -1099,7 +1168,7 @@
 
   // ---------------- Persistence (IndexedDB) ----------------
   // A single shared "File Folder" (fileFolder store) is now the only place
-  // files + their Skip Start / Skip End get saved locally. Each of the four
+  // files + their Crop Start / Crop End get saved locally. Each of the four
   // tools (Waveform Lab, Compare, Tap Analyser, Clustering) is session-only
   // for files picked straight from your computer; loading from the folder
   // instead brings along its saved skip times. `library`/`tapLibrary`/
@@ -1107,7 +1176,7 @@
   // can be migrated into `fileFolder` the first time a returning user's DB
   // gets upgraded — nothing writes to them any more.
   const DB_NAME = 'waveform-lab-db';
-  const DB_VERSION = 3;
+  const DB_VERSION = 4;
   let dbPromise = null;
 
   function openDB(){
@@ -1122,6 +1191,10 @@
         if (!db.objectStoreNames.contains('clusterLibrary')) db.createObjectStore('clusterLibrary', {keyPath:'id'});
         const hadFolder = db.objectStoreNames.contains('fileFolder');
         if (!hadFolder) db.createObjectStore('fileFolder', {keyPath:'id'});
+        // v4: named folders within the File Folder tab, for grouping files.
+        // A file's membership lives on its own fileFolder record (folderId),
+        // this store just holds the folder names themselves.
+        if (!db.objectStoreNames.contains('fileFolderGroups')) db.createObjectStore('fileFolderGroups', {keyPath:'id'});
 
         // One-time migration: fold any files already saved under the old
         // per-section stores into the new shared folder, so upgrading
@@ -1193,15 +1266,23 @@
   }
 
   // Saves/updates one file in the shared local File Folder (name, size, raw
-  // bytes, Skip Start / Skip End). This is the only place file data gets
+  // bytes, Crop Start / Crop End). This is the only place file data gets
   // persisted now — Waveform Lab, Compare, Tap Analyser and Clustering no
   // longer save their working lists themselves.
   function persistFolderEntry(entry){
     idbPut('fileFolder', {
       id: entry.id, name: entry.name, size: entry.size,
       skipStart: entry.skipStart, skipEnd: entry.skipEnd,
+      folderId: entry.folderId || null,
       arrayBuffer: entry._rawBuffer
     });
+  }
+
+  // Named folders within the File Folder tab, for grouping files. A file's
+  // membership lives on its own fileFolder record (folderId); this store
+  // just holds the folder names themselves.
+  function persistFolderGroup(group){
+    idbPut('fileFolderGroups', { id: group.id, name: group.name });
   }
 
   // When a Tap Analyser / Clustering row that was loaded from the shared
@@ -2132,7 +2213,7 @@
   function detectTapEvents(samples, sr, numEvents, minGapSec, skipStartSec){
     const skipSamples = Math.max(0, Math.round(skipStartSec*sr));
     const region = samples.subarray(Math.min(skipSamples, samples.length));
-    if (region.length < 32) throw new Error('not enough audio after Skip Start');
+    if (region.length < 32) throw new Error('not enough audio after Crop Start');
 
     const smoothSamples = Math.max(1, Math.round(sr*5/1000));
     const env = computeEnvelopeHilbert(region, smoothSamples);
@@ -2154,7 +2235,7 @@
     // Safe to prefilter by height first: prominence <= height always, so this
     // never discards a candidate that would have passed the prominence test.
     const candidates = rawCandidates.filter(idx => peakProminence(onset, idx) >= prominenceThresh);
-    if (!candidates.length) throw new Error('no tap/pluck transients detected — try adjusting Skip Start or Min Gap');
+    if (!candidates.length) throw new Error('no tap/pluck transients detected — try adjusting Crop Start or Min Gap');
 
     const order = candidates.slice().sort((a,b) => onset[b]-onset[a]);
     const kept = [];
@@ -2387,7 +2468,7 @@
     return summaries.slice(0, topN);
   }
 
-  // Full per-file pipeline: skip-end trim, skip-start (auto or manual), detect
+  // Full per-file pipeline: crop-end trim, crop-start (auto or manual), detect
   // events, FFT + normalise each, cluster into top-5 common frequencies.
   async function analyseTapFile(entry, opts){
     const audioBuffer = entry.audioBuffer;
@@ -2406,11 +2487,14 @@
     }
     let durationTotal = samples.length/sr;
 
+    // Crop End is seconds trimmed off the END of the file (same convention
+    // as Clustering's trim_signal), not an absolute timestamp.
     const skipEndVal = (entry.skipEnd||'').trim();
     if (skipEndVal !== ''){
-      const skipEndSec = Math.min(parseFloat(skipEndVal), durationTotal);
+      const skipEndSec = parseFloat(skipEndVal);
       if (isFinite(skipEndSec) && skipEndSec > 0){
-        samples = samples.subarray(0, Math.max(1, Math.round(skipEndSec*sr)));
+        const keepLen = Math.max(1, samples.length - Math.round(skipEndSec*sr));
+        samples = samples.subarray(0, keepLen);
         durationTotal = samples.length/sr;
       }
     }
@@ -3059,7 +3143,10 @@
     const se = parseFloat(entry.skipEnd);
     ctx.fillStyle = 'rgba(194,59,46,0.16)';
     if (isFinite(ss) && ss > 0) ctx.fillRect(0, 0, Math.min(w, (ss/dur)*w), h);
-    if (isFinite(se) && se < dur) ctx.fillRect(Math.max(0,(se/dur)*w), 0, w - Math.max(0,(se/dur)*w), h);
+    if (isFinite(se) && se > 0){
+      const seStart = Math.max(0, dur-se);
+      ctx.fillRect(Math.max(0,(seStart/dur)*w), 0, w - Math.max(0,(seStart/dur)*w), h);
+    }
   }
 
   function renderTapRows(){
@@ -3117,7 +3204,7 @@
 
       const ssField = document.createElement('div');
       ssField.className = 'tap-field';
-      ssField.innerHTML = '<label>Skip Start (s)</label>';
+      ssField.innerHTML = '<label>Crop Start (s)</label>';
       const ssInput = document.createElement('input');
       ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'auto';
       ssInput.value = entry.skipStart;
@@ -3126,7 +3213,7 @@
 
       const seField = document.createElement('div');
       seField.className = 'tap-field';
-      seField.innerHTML = '<label>Skip End (s)</label>';
+      seField.innerHTML = '<label>Crop End (s)</label>';
       const seInput = document.createElement('input');
       seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
       seInput.value = entry.skipEnd;
@@ -3294,10 +3381,11 @@
   });
 
   // ---------------- File Folder page ----------------
-  // The one shared, persisted library. Files added here (and their Skip
-  // Start / Skip End) are saved to IndexedDB and can be pulled into any of
+  // The one shared, persisted library. Files added here (and their Crop
+  // Start / Crop End) are saved to IndexedDB and can be pulled into any of
   // the four tools above via their "Load from local folder" button.
   function addFolderFiles(fileArr){
+    const targetFolderId = currentFolderGroupId; // capture at drop-time, not decode-time
     [...fileArr].forEach(file => {
       if (!/\.wav$/i.test(file.name) && file.type !== 'audio/wav' && file.type !== 'audio/x-wav') return;
       const reader = new FileReader();
@@ -3308,7 +3396,7 @@
           const audioBuffer = await tmpCtx.decodeAudioData(arrayBuffer.slice(0));
           const entry = {
             id: uid(), name: file.name, size: file.size, audioBuffer,
-            skipStart:'', skipEnd:'',
+            skipStart:'', skipEnd:'', folderId: targetFolderId,
             _rawBuffer: arrayBuffer.slice(0)
           };
           folderLibrary.push(entry);
@@ -3334,80 +3422,321 @@
     const se = parseFloat(entry.skipEnd);
     ctx.fillStyle = 'rgba(194,59,46,0.16)';
     if (isFinite(ss) && ss > 0) ctx.fillRect(0, 0, Math.min(w, (ss/dur)*w), h);
-    if (isFinite(se) && se < dur) ctx.fillRect(Math.max(0,(se/dur)*w), 0, w - Math.max(0,(se/dur)*w), h);
+    if (isFinite(se) && se > 0){
+      const seStart = Math.max(0, dur-se);
+      ctx.fillRect(Math.max(0,(seStart/dur)*w), 0, w - Math.max(0,(seStart/dur)*w), h);
+    }
   }
 
-  function renderFolderRows(){
-    folderFileCount.textContent = `${folderLibrary.length} saved`;
-    if (!folderLibrary.length){
-      folderRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+  // Builds a single Hann-windowed FFT (up to 8192 samples, taken from the
+  // middle of the file) for the File Folder's "summary FFT" preview —
+  // respects this entry's Crop Start / Crop End first, same convention used
+  // everywhere else (Crop End = seconds trimmed off the end).
+  function computeFolderSpectrum(entry){
+    const audioBuffer = entry.audioBuffer;
+    const sr = audioBuffer.sampleRate;
+    const nCh = audioBuffer.numberOfChannels;
+    let samples;
+    if (nCh === 1){
+      samples = audioBuffer.getChannelData(0).slice();
+    } else {
+      const n = audioBuffer.length;
+      samples = new Float32Array(n);
+      for (let c = 0; c < nCh; c++){
+        const ch = audioBuffer.getChannelData(c);
+        for (let i = 0; i < n; i++) samples[i] += ch[i]/nCh;
+      }
+    }
+
+    const ssVal = (entry.skipStart||'').trim();
+    const ssSec = ssVal !== '' ? parseFloat(ssVal) : 0;
+    if (isFinite(ssSec) && ssSec > 0){
+      samples = samples.subarray(Math.min(samples.length, Math.round(ssSec*sr)));
+    }
+    const seVal = (entry.skipEnd||'').trim();
+    const seSec = seVal !== '' ? parseFloat(seVal) : 0;
+    if (isFinite(seSec) && seSec > 0){
+      const keepLen = Math.max(1, samples.length - Math.round(seSec*sr));
+      samples = samples.subarray(0, keepLen);
+    }
+    if (samples.length < 16) return null;
+
+    const M = Math.min(8192, samples.length);
+    const startIdx = Math.max(0, Math.floor((samples.length - M) / 2));
+    const windowed = applyHann(samples.subarray(startIdx, startIdx + M));
+    const { freqs, mags } = computeFftMagExact(windowed, sr);
+    return { freqs, mags, sr };
+  }
+
+  function drawFolderSpectrum(canvas, entry){
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#f4f4f0';
+    ctx.fillRect(0,0,w,h);
+
+    const spec = computeFolderSpectrum(entry);
+    if (!spec){
+      ctx.fillStyle = '#8f8f86';
+      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.fillText('Not enough audio to analyse (check Crop Start / Crop End).', 10, h/2);
       return;
     }
-    folderRows.innerHTML = '';
-    folderLibrary.forEach(entry => {
-      const row = document.createElement('div');
-      row.className = 'tap-row';
+    const { freqs, mags, sr } = spec;
+    const fMin = 0, fMax = Math.min(2000, sr/2);
+    const binHz = freqs[1] - freqs[0];
 
-      const head = document.createElement('div');
-      head.className = 'tr-head';
+    ctx.strokeStyle = '#e2e2dc';
+    ctx.lineWidth = 1;
+    const nTicks = 5;
+    for (let i = 0; i <= nTicks; i++){
+      const f = fMin + (i/nTicks)*(fMax-fMin);
+      const x = (f-fMin)/(fMax-fMin)*w;
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      ctx.fillStyle = '#6b6b64';
+      ctx.font = '11px "JetBrains Mono", monospace';
+      const label = fmtHz(f);
+      const lx = Math.min(w - ctx.measureText(label).width - 4, Math.max(2, x+3));
+      ctx.fillText(label, lx, h-4);
+    }
 
-      const nameEl = document.createElement('div');
-      nameEl.className = 'tr-name';
-      nameEl.textContent = entry.name;
-      nameEl.title = 'Click to rename';
+    const loBin = Math.max(0, Math.floor(fMin/binHz));
+    const hiBin = Math.min(freqs.length-1, Math.ceil(fMax/binHz));
+    const dbVals = [];
+    for (let k = loBin; k <= hiBin; k++) dbVals.push(20*Math.log10(mags[k]+1e-12));
+    const { dbMin, dbMax } = autoDbRange(dbVals);
 
-      const startRename = () => {
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'tr-name-input';
-        input.value = entry.name;
-        nameEl.replaceWith(input);
-        input.focus();
-        input.select();
+    ctx.beginPath();
+    ctx.strokeStyle = '#b5690a';
+    ctx.lineWidth = 1.75;
+    for (let x = 0; x < w; x++){
+      const f = fMin + (x/w)*(fMax-fMin);
+      const idx = Math.max(0, Math.min(freqs.length-1, Math.round(f/binHz)));
+      const db = Math.max(dbMin, Math.min(dbMax, 20*Math.log10(mags[idx]+1e-12)));
+      const norm = (db-dbMin)/(dbMax-dbMin);
+      const y = h - norm*h;
+      if (x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
 
-        let done = false;
-        const commit = () => {
-          if (done) return;
-          done = true;
-          const newName = input.value.trim();
-          if (newName && newName !== entry.name){
-            entry.name = newName;
-            persistFolderEntry(entry);
-            sortByName(folderLibrary);
-          }
+    let peakDb = -Infinity, peakFreq = 0;
+    for (let k = loBin; k <= hiBin; k++){
+      const db = 20*Math.log10(mags[k]+1e-12);
+      if (db > peakDb){ peakDb = db; peakFreq = freqs[k]; }
+    }
+    if (isFinite(peakDb)){
+      const x = (peakFreq-fMin)/(fMax-fMin)*w;
+      ctx.strokeStyle = 'rgba(181,105,10,0.4)';
+      ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#b5690a';
+      ctx.font = '13px "JetBrains Mono", monospace';
+      ctx.fillText(fmtHz(peakFreq), Math.min(w-70, x+6), 14);
+    }
+  }
+
+  // ⋮ menu for a file row: Move (drills into a folder-target sublist),
+  // Rename, Delete.
+  function buildFileMenu(entry){
+    const menu = document.createElement('div');
+    menu.className = 'tr-menu';
+    const state = folderMenuOpen;
+
+    if (state.mode === 'move'){
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'tr-menu-item tr-menu-back';
+      back.textContent = '‹ Back';
+      back.addEventListener('click', (e) => { e.stopPropagation(); folderMenuOpen.mode = 'main'; renderFolderRows(); });
+      menu.appendChild(back);
+
+      if (entry.folderId !== null){
+        const rootBtn = document.createElement('button');
+        rootBtn.type = 'button';
+        rootBtn.className = 'tr-menu-item';
+        rootBtn.textContent = 'File Folder (no folder)';
+        rootBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          entry.folderId = null;
+          persistFolderEntry(entry);
+          folderMenuOpen = null;
           renderFolderRows();
-        };
-        const cancel = () => {
-          if (done) return;
-          done = true;
-          renderFolderRows();
-        };
-        input.addEventListener('blur', commit);
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter'){ e.preventDefault(); commit(); }
-          else if (e.key === 'Escape'){ e.preventDefault(); cancel(); }
         });
-      };
-      nameEl.addEventListener('click', startRename);
-
-      const renameBtn = document.createElement('button');
-      renameBtn.className = 'tr-rename';
-      renameBtn.innerHTML = '&#9998;';
-      renameBtn.title = 'Rename this file';
-      renameBtn.addEventListener('click', startRename);
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'tr-remove';
-      removeBtn.innerHTML = '&times;';
-      removeBtn.title = 'Delete this file from your local folder';
-      removeBtn.addEventListener('click', () => {
-        folderLibrary = folderLibrary.filter(f => f.id !== entry.id);
-        idbDelete('fileFolder', entry.id);
-        renderFolderRows();
+        menu.appendChild(rootBtn);
+      }
+      const targets = folderGroups.filter(g => g.id !== entry.folderId);
+      targets.forEach(g => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tr-menu-item';
+        btn.textContent = g.name;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          entry.folderId = g.id;
+          persistFolderEntry(entry);
+          folderMenuOpen = null;
+          renderFolderRows();
+        });
+        menu.appendChild(btn);
       });
-      head.appendChild(nameEl);
-      head.appendChild(renameBtn);
-      head.appendChild(removeBtn);
+      if (!targets.length && entry.folderId === null){
+        const note = document.createElement('div');
+        note.className = 'tr-menu-note';
+        note.textContent = 'No folders yet — create one first.';
+        menu.appendChild(note);
+      }
+      return menu;
+    }
+
+    const moveBtn = document.createElement('button');
+    moveBtn.type = 'button';
+    moveBtn.className = 'tr-menu-item';
+    moveBtn.textContent = 'Move';
+    moveBtn.addEventListener('click', (e) => { e.stopPropagation(); folderMenuOpen.mode = 'move'; renderFolderRows(); });
+    menu.appendChild(moveBtn);
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'tr-menu-item';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderRenaming = {kind:'file', id: entry.id};
+      folderMenuOpen = null;
+      renderFolderRows();
+    });
+    menu.appendChild(renameBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'tr-menu-item danger';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderLibrary = folderLibrary.filter(f => f.id !== entry.id);
+      folderExpandedIds.delete(entry.id);
+      idbDelete('fileFolder', entry.id);
+      folderMenuOpen = null;
+      renderFolderRows();
+    });
+    menu.appendChild(delBtn);
+    return menu;
+  }
+
+  // ⋮ menu for a folder row: Rename, Delete (deleting a folder just
+  // ungroups its files back to the root — it never deletes the files).
+  function buildGroupMenu(group){
+    const menu = document.createElement('div');
+    menu.className = 'tr-menu';
+
+    const renameBtn = document.createElement('button');
+    renameBtn.type = 'button';
+    renameBtn.className = 'tr-menu-item';
+    renameBtn.textContent = 'Rename';
+    renameBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderRenaming = {kind:'folder', id: group.id};
+      folderMenuOpen = null;
+      renderFolderRows();
+    });
+    menu.appendChild(renameBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'tr-menu-item danger';
+    delBtn.textContent = 'Delete';
+    delBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      folderLibrary.forEach(f => {
+        if (f.folderId === group.id){
+          f.folderId = null;
+          persistFolderEntry(f);
+        }
+      });
+      folderGroups = folderGroups.filter(g => g.id !== group.id);
+      idbDelete('fileFolderGroups', group.id);
+      if (currentFolderGroupId === group.id) currentFolderGroupId = null;
+      folderMenuOpen = null;
+      renderFolderRows();
+    });
+    menu.appendChild(delBtn);
+    return menu;
+  }
+
+  function buildFileRow(entry){
+    const isRenaming = folderRenaming && folderRenaming.kind === 'file' && folderRenaming.id === entry.id;
+    const expanded = folderExpandedIds.has(entry.id);
+    const row = document.createElement('div');
+    row.className = 'tap-row' + (expanded ? ' expanded' : '');
+
+    const head = document.createElement('div');
+    head.className = 'tr-head';
+
+    const chevron = document.createElement('div');
+    chevron.className = 'tr-chevron';
+    chevron.innerHTML = '&#9656;';
+
+    if (isRenaming){
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tr-name-input';
+      input.value = entry.name;
+      head.appendChild(chevron);
+      head.appendChild(input);
+      row.appendChild(head);
+      setTimeout(() => { input.focus(); input.select(); }, 0);
+      const commit = () => {
+        const v = input.value.trim();
+        if (v && v !== entry.name){ entry.name = v; persistFolderEntry(entry); sortByName(folderLibrary); }
+        folderRenaming = null;
+        renderFolderRows();
+      };
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+        else if (e.key === 'Escape'){ e.preventDefault(); folderRenaming = null; renderFolderRows(); }
+      });
+      return row;
+    }
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'tr-name';
+    nameEl.textContent = entry.name;
+    nameEl.title = 'Click to show/hide waveform, crop times & summary FFT';
+
+    const toggleExpand = () => {
+      if (folderExpandedIds.has(entry.id)) folderExpandedIds.delete(entry.id);
+      else folderExpandedIds.add(entry.id);
+      renderFolderRows();
+    };
+    chevron.addEventListener('click', toggleExpand);
+    nameEl.addEventListener('click', toggleExpand);
+
+    const dotsBtn = document.createElement('button');
+    dotsBtn.type = 'button';
+    dotsBtn.className = 'tr-dots';
+    dotsBtn.title = 'More options';
+    dotsBtn.innerHTML = '&#8942;';
+    dotsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = folderMenuOpen && folderMenuOpen.kind === 'file' && folderMenuOpen.id === entry.id;
+      folderMenuOpen = isOpen ? null : {kind:'file', id: entry.id, mode:'main'};
+      renderFolderRows();
+    });
+
+    head.appendChild(chevron);
+    head.appendChild(nameEl);
+    head.appendChild(dotsBtn);
+    row.appendChild(head);
+
+    if (folderMenuOpen && folderMenuOpen.kind === 'file' && folderMenuOpen.id === entry.id){
+      row.appendChild(buildFileMenu(entry));
+    }
+
+    if (expanded){
+      const body = document.createElement('div');
+      body.className = 'tr-body';
 
       const canvas = document.createElement('canvas');
       canvas.className = 'tr-wave';
@@ -3416,35 +3745,274 @@
       const fields = document.createElement('div');
       fields.className = 'tr-fields';
 
+      const fftCanvasEl = document.createElement('canvas');
+      fftCanvasEl.className = 'tr-fft';
+      fftCanvasEl.width = 1200; fftCanvasEl.height = 110;
+
       const ssField = document.createElement('div');
       ssField.className = 'tap-field';
-      ssField.innerHTML = '<label>Skip Start (s)</label>';
+      ssField.innerHTML = '<label>Crop Start (s)</label>';
       const ssInput = document.createElement('input');
       ssInput.type = 'number'; ssInput.min = '0'; ssInput.step = '0.1'; ssInput.placeholder = 'none';
       ssInput.value = entry.skipStart;
-      ssInput.addEventListener('change', () => { entry.skipStart = ssInput.value; drawFolderRowWave(canvas, entry); persistFolderEntry(entry); });
+      ssInput.addEventListener('change', () => {
+        entry.skipStart = ssInput.value;
+        drawFolderRowWave(canvas, entry);
+        drawFolderSpectrum(fftCanvasEl, entry);
+        persistFolderEntry(entry);
+      });
       ssField.appendChild(ssInput);
 
       const seField = document.createElement('div');
       seField.className = 'tap-field';
-      seField.innerHTML = '<label>Skip End (s)</label>';
+      seField.innerHTML = '<label>Crop End (s)</label>';
       const seInput = document.createElement('input');
       seInput.type = 'number'; seInput.min = '0'; seInput.step = '0.1'; seInput.placeholder = 'none';
       seInput.value = entry.skipEnd;
-      seInput.addEventListener('change', () => { entry.skipEnd = seInput.value; drawFolderRowWave(canvas, entry); persistFolderEntry(entry); });
+      seInput.addEventListener('change', () => {
+        entry.skipEnd = seInput.value;
+        drawFolderRowWave(canvas, entry);
+        drawFolderSpectrum(fftCanvasEl, entry);
+        persistFolderEntry(entry);
+      });
       seField.appendChild(seInput);
 
       fields.appendChild(ssField);
       fields.appendChild(seField);
 
-      row.appendChild(head);
-      row.appendChild(canvas);
-      row.appendChild(fields);
-      folderRows.appendChild(row);
+      const fftLabel = document.createElement('div');
+      fftLabel.className = 'tr-fft-label';
+      fftLabel.textContent = 'Summary FFT (crop applied, up to 2 kHz)';
+
+      body.appendChild(canvas);
+      body.appendChild(fields);
+      body.appendChild(fftLabel);
+      body.appendChild(fftCanvasEl);
+      row.appendChild(body);
 
       drawFolderRowWave(canvas, entry);
-    });
+      drawFolderSpectrum(fftCanvasEl, entry);
+    }
+
+    return row;
   }
+
+  function buildGroupRow(group){
+    const isRenaming = folderRenaming && folderRenaming.kind === 'folder' && folderRenaming.id === group.id;
+    const row = document.createElement('div');
+    row.className = 'tap-row' + (isRenaming ? '' : ' is-group');
+
+    const head = document.createElement('div');
+    head.className = 'tr-head';
+
+    if (isRenaming){
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tr-name-input';
+      input.value = group.name;
+      head.appendChild(input);
+      row.appendChild(head);
+      setTimeout(() => { input.focus(); input.select(); }, 0);
+      const commit = () => {
+        const v = input.value.trim();
+        if (v && v !== group.name){ group.name = v; persistFolderGroup(group); sortByName(folderGroups); }
+        folderRenaming = null;
+        renderFolderRows();
+      };
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+        else if (e.key === 'Escape'){ e.preventDefault(); folderRenaming = null; renderFolderRows(); }
+      });
+      return row;
+    }
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'tr-name';
+    nameEl.textContent = group.name;
+    nameEl.title = 'Open this folder';
+
+    const count = folderLibrary.filter(f => f.folderId === group.id).length;
+    const meta = document.createElement('div');
+    meta.className = 'tr-meta';
+    meta.textContent = count + (count === 1 ? ' file' : ' files');
+
+    const dotsBtn = document.createElement('button');
+    dotsBtn.type = 'button';
+    dotsBtn.className = 'tr-dots';
+    dotsBtn.title = 'More options';
+    dotsBtn.innerHTML = '&#8942;';
+    dotsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = folderMenuOpen && folderMenuOpen.kind === 'folder' && folderMenuOpen.id === group.id;
+      folderMenuOpen = isOpen ? null : {kind:'folder', id: group.id, mode:'main'};
+      renderFolderRows();
+    });
+
+    head.appendChild(nameEl);
+    head.appendChild(meta);
+    head.appendChild(dotsBtn);
+    row.appendChild(head);
+
+    row.addEventListener('click', () => {
+      currentFolderGroupId = group.id;
+      renderFolderRows();
+    });
+
+    if (folderMenuOpen && folderMenuOpen.kind === 'folder' && folderMenuOpen.id === group.id){
+      row.appendChild(buildGroupMenu(group));
+    }
+    return row;
+  }
+
+  function renderFolderCrumbs(){
+    folderCrumbs.innerHTML = '';
+    if (folderSearchQuery.trim()) return; // flat cross-folder results while searching
+    if (currentFolderGroupId === null){
+      const cur = document.createElement('span');
+      cur.className = 'fc-cur';
+      cur.textContent = 'File Folder';
+      folderCrumbs.appendChild(cur);
+      return;
+    }
+    const group = folderGroups.find(g => g.id === currentFolderGroupId);
+    const root = document.createElement('span');
+    root.className = 'fc-seg';
+    root.textContent = 'File Folder';
+    root.addEventListener('click', () => { currentFolderGroupId = null; renderFolderRows(); });
+    const sep = document.createElement('span');
+    sep.textContent = '▸';
+    const cur = document.createElement('span');
+    cur.className = 'fc-cur';
+    cur.textContent = group ? group.name : '';
+    folderCrumbs.appendChild(root);
+    folderCrumbs.appendChild(sep);
+    folderCrumbs.appendChild(cur);
+  }
+
+  function renderFolderRows(){
+    renderFolderCrumbs();
+    const q = folderSearchQuery.trim().toLowerCase();
+
+    folderFileCount.textContent = q
+      ? `${folderLibrary.filter(e => e.name.toLowerCase().includes(q)).length} of ${folderLibrary.length} shown`
+      : `${folderLibrary.length} saved`;
+
+    if (!folderLibrary.length && !folderGroups.length && !addingFolderGroup){
+      folderRows.innerHTML = '<div class="empty-note">No files yet.</div>';
+      return;
+    }
+    folderRows.innerHTML = '';
+
+    if (addingFolderGroup && !q){
+      const row = document.createElement('div');
+      row.className = 'tap-row is-group';
+      const head = document.createElement('div');
+      head.className = 'tr-head';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'tr-name-input';
+      input.placeholder = 'Folder name';
+      head.appendChild(input);
+      row.appendChild(head);
+      folderRows.appendChild(row);
+      setTimeout(() => input.focus(), 0);
+      const commit = () => {
+        const v = input.value.trim();
+        if (v){
+          const group = { id: uid(), name: v };
+          folderGroups.push(group);
+          sortByName(folderGroups);
+          persistFolderGroup(group);
+        }
+        addingFolderGroup = false;
+        renderFolderRows();
+      };
+      input.addEventListener('blur', commit);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter'){ e.preventDefault(); commit(); }
+        else if (e.key === 'Escape'){ e.preventDefault(); addingFolderGroup = false; renderFolderRows(); }
+      });
+    }
+
+    if (q){
+      const matchingGroups = folderGroups.filter(g => g.name.toLowerCase().includes(q));
+      const matchingFiles = folderLibrary.filter(e => e.name.toLowerCase().includes(q));
+      if (!matchingGroups.length && !matchingFiles.length){
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = 'No files match your search.';
+        folderRows.appendChild(note);
+        return;
+      }
+      if (matchingGroups.length){
+        const lbl = document.createElement('div');
+        lbl.className = 'folder-group-label';
+        lbl.textContent = 'Folders';
+        folderRows.appendChild(lbl);
+        matchingGroups.forEach(g => folderRows.appendChild(buildGroupRow(g)));
+      }
+      const lbl2 = document.createElement('div');
+      lbl2.className = 'folder-group-label';
+      lbl2.textContent = 'Files';
+      folderRows.appendChild(lbl2);
+      if (matchingFiles.length){
+        matchingFiles.forEach(f => folderRows.appendChild(buildFileRow(f)));
+      } else {
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = 'No files match your search.';
+        folderRows.appendChild(note);
+      }
+      return;
+    }
+
+    if (currentFolderGroupId === null){
+      if (folderGroups.length){
+        const lbl = document.createElement('div');
+        lbl.className = 'folder-group-label';
+        lbl.textContent = 'Folders';
+        folderRows.appendChild(lbl);
+        folderGroups.forEach(g => folderRows.appendChild(buildGroupRow(g)));
+      }
+      const loose = folderLibrary.filter(f => f.folderId == null);
+      const lbl2 = document.createElement('div');
+      lbl2.className = 'folder-group-label';
+      lbl2.textContent = 'Files';
+      folderRows.appendChild(lbl2);
+      if (loose.length){
+        loose.forEach(f => folderRows.appendChild(buildFileRow(f)));
+      } else {
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = 'No ungrouped files.';
+        folderRows.appendChild(note);
+      }
+    } else {
+      const inGroup = folderLibrary.filter(f => f.folderId === currentFolderGroupId);
+      if (inGroup.length){
+        inGroup.forEach(f => folderRows.appendChild(buildFileRow(f)));
+      } else {
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = 'This folder is empty. Move files in from File Folder.';
+        folderRows.appendChild(note);
+      }
+    }
+  }
+
+  folderNewFolderBtn.addEventListener('click', () => {
+    currentFolderGroupId = null;
+    folderSearchQuery = '';
+    folderSearchInput.value = '';
+    addingFolderGroup = true;
+    renderFolderRows();
+  });
+
+  folderSearchInput.addEventListener('input', () => {
+    folderSearchQuery = folderSearchInput.value;
+    renderFolderRows();
+  });
 
   fileInputFolder.addEventListener('change', (e) => addFolderFiles(e.target.files));
   ;['dragover','dragenter'].forEach(evtName => {
@@ -3507,8 +4075,8 @@
       const metaDiv = document.createElement('div');
       metaDiv.className = 'fp-meta';
       const trimBits = [
-        entry.skipStart !== '' ? `skip start ${entry.skipStart}s` : null,
-        entry.skipEnd !== '' ? `skip end ${entry.skipEnd}s` : null,
+        entry.skipStart !== '' ? `crop start ${entry.skipStart}s` : null,
+        entry.skipEnd !== '' ? `crop end ${entry.skipEnd}s` : null,
       ].filter(Boolean).join(' · ');
       metaDiv.textContent = fmtBytes(entry.size) + (trimBits ? ' · ' + trimBits : '');
       info.appendChild(nameDiv);
@@ -5267,12 +5835,16 @@ def run_clustering_bridge(payload_json):
   // ---------------- Restore saved folder ----------------
   async function restoreLibraries(){
     // Rebuilds the shared File Folder from IndexedDB after a reload —
-    // including each file's Skip Start / Skip End — so it's still there
+    // including each file's Crop Start / Crop End — so it's still there
     // next time. Waveform Lab, Compare, Tap Analyser and Clustering are no
     // longer auto-persisted themselves; each reload starts with an empty
     // working list in those tools until files are loaded fresh or pulled
     // in from this folder.
     try{
+      const groupRecords = await idbGetAll('fileFolderGroups');
+      folderGroups = groupRecords.map(rec => ({ id: rec.id, name: rec.name }));
+      sortByName(folderGroups);
+
       const folderRecords = await idbGetAll('fileFolder');
       for (const rec of folderRecords){
         try{
@@ -5281,6 +5853,7 @@ def run_clustering_bridge(payload_json):
           folderLibrary.push({
             id: rec.id, name: rec.name, size: rec.size, audioBuffer,
             skipStart: rec.skipStart || '', skipEnd: rec.skipEnd || '',
+            folderId: rec.folderId || null,
             _rawBuffer: rec.arrayBuffer
           });
           tmpCtx.close();
@@ -5288,7 +5861,7 @@ def run_clustering_bridge(payload_json):
           console.warn('Could not restore', rec.name, err);
         }
       }
-      if (folderLibrary.length){
+      if (folderLibrary.length || folderGroups.length){
         sortByName(folderLibrary);
         renderFolderRows();
       }
